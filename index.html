@@ -1,0 +1,3042 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>StoryLens</title>
+    <link href="https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&family=Caveat:wght@400;700&family=Comic+Neue:ital,wght@0,400;0,700;1,400;1,700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* ═══════════════════════════════════════════
+           PALETTE  (Moodboard: cream / black / red / gold)
+           ═══════════════════════════════════════════ */
+        :root {
+            --navy:       #1B2A4A;
+            --amber:      #F59E0B;
+            --cream:      #FAF7F2;
+            --terracotta: #E07A5F;
+            --teal:       #0891B2;
+            --rose:       #FB7185;
+            --coral:      #FF6B6B;
+            --green:      #22C55E;
+            --pink:       #EC4899;
+            --slate:      #475569;
+        }
+
+        /* ── Reset ── */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html, body {
+            width: 100%; height: 100%;
+            font-family: 'DM Sans', sans-serif;
+            background-color: #E8E8E8;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Halftone dot texture background */
+        body::before {
+            content: '';
+            position: fixed; top: 0; left: 0;
+            width: 100%; height: 100%;
+            background-image: radial-gradient(circle, rgba(27,42,74,0.03) 1px, transparent 1px);
+            background-size: 8px 8px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* ── Phone frame ── */
+        .phone-frame {
+            width: 375px;
+            height: 812px;
+            border-radius: 44px;
+            border: 8px solid #1a1a1a;
+            overflow: hidden;
+            position: relative;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3), inset 0 0 0 2px #333;
+            background: #1a1a1a;
+        }
+
+        /* Notch */
+        .phone-frame::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 150px;
+            height: 28px;
+            background: #1a1a1a;
+            border-radius: 0 0 18px 18px;
+            z-index: 100;
+        }
+
+        /* Home indicator */
+        .phone-frame::after {
+            content: '';
+            position: absolute;
+            bottom: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 134px;
+            height: 5px;
+            background: #666;
+            border-radius: 3px;
+            z-index: 100;
+        }
+
+        /* ── App shell ── */
+        .app-container {
+            position: relative;
+            width: 100%; height: 100%;
+            overflow: hidden;
+            background-color: var(--cream);
+            z-index: 1;
+            border-radius: 36px;
+        }
+
+        /* ── Screens ── */
+        .screen {
+            position: absolute;
+            width: 100%; height: 100%;
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.6s ease-in-out;
+        }
+        .screen.active { opacity: 1; pointer-events: auto; }
+
+        /* ════════════════════════════════════════════
+           SCREEN 0 — LANDING
+           ════════════════════════════════════════════ */
+        #landingScreen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        .landing-top {
+            padding: 40px 20px 16px;
+            text-align: center;
+        }
+
+        .logo {
+            font-family: 'Kalam', cursive;
+            font-weight: 700;
+            font-size: 44px;
+            color: var(--navy);
+            letter-spacing: 2px;
+        }
+
+        .tagline {
+            font-family: 'Caveat', cursive;
+            font-size: 20px;
+            color: var(--navy);
+            opacity: 0.7;
+            margin-top: 4px;
+        }
+
+        .landing-video {
+            flex: 1;
+            width: 100%;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .landing-video::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 50px;
+            background: linear-gradient(to bottom, var(--cream), transparent);
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .landing-video video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .tap-hint {
+            position: absolute;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-family: 'Caveat', cursive;
+            font-size: 16px;
+            color: var(--navy);
+            opacity: 0.5;
+            z-index: 2;
+            animation: hintPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes hintPulse {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 0.9; }
+        }
+
+        /* ════════════════════════════════════════════
+           SCREEN 1 — QUESTION
+           ════════════════════════════════════════════ */
+        #homeScreen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 50px 24px 24px;
+            height: 100%;
+            overflow-y: auto;
+        }
+
+        .main-question {
+            font-family: 'Kalam', cursive;
+            font-weight: 700;
+            font-size: 28px;
+            color: var(--navy);
+            text-align: center;
+            line-height: 1.35;
+            margin-bottom: 18px;
+            max-width: 320px;
+        }
+
+        /* ── Chat bubble input ── */
+        .bubble-input-wrap {
+            width: 100%;
+            max-width: 340px;
+            position: relative;
+            margin-bottom: 16px;
+        }
+
+        .bubble-input {
+            width: 100%;
+            padding: 14px 20px;
+            font-family: 'Caveat', cursive;
+            font-size: 18px;
+            color: var(--navy);
+            background: white;
+            border: 3px solid var(--navy);
+            border-radius: 24px;
+            outline: none;
+            box-shadow: 3px 3px 0px rgba(27,42,74,0.12);
+            transition: box-shadow 0.3s ease, border-color 0.3s ease;
+            min-height: 50px;
+        }
+
+        .bubble-input:focus {
+            box-shadow: 4px 4px 0px var(--amber);
+            border-color: var(--navy);
+        }
+
+        /* Ghost text overlay for typewriter effect */
+        .ghost-text {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            padding: 14px 20px;
+            font-family: 'Caveat', cursive;
+            font-size: 18px;
+            color: rgba(27,42,74,0.4);
+            font-style: italic;
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+            border-radius: 24px;
+        }
+
+        .ghost-text .cursor {
+            display: inline-block;
+            width: 1px;
+            height: 1.1em;
+            background: rgba(27,42,74,0.35);
+            margin-left: 1px;
+            animation: blink 0.8s step-end infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        /* Bubble tail */
+        .bubble-input-wrap::after {
+            content: '';
+            position: absolute;
+            bottom: -12px;
+            left: 32px;
+            width: 0; height: 0;
+            border-left: 10px solid transparent;
+            border-right: 10px solid transparent;
+            border-top: 12px solid var(--navy);
+        }
+        .bubble-input-wrap::before {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 33px;
+            width: 0; height: 0;
+            border-left: 9px solid transparent;
+            border-right: 9px solid transparent;
+            border-top: 10px solid white;
+            z-index: 1;
+        }
+
+        /* ── Explore button ── */
+        .explore-btn {
+            position: relative;
+            padding: 10px 26px;
+            font-family: 'Kalam', cursive;
+            font-weight: 700;
+            font-size: 18px;
+            color: var(--navy);
+            background-color: var(--amber);
+            border: 2.5px solid var(--navy);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            transform: rotate(-2deg);
+            box-shadow: 3px 3px 0px var(--navy);
+            letter-spacing: 1px;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: 3px 3px 0px var(--navy); }
+            50%      { box-shadow: 4px 4px 0px var(--navy); }
+        }
+
+        .explore-btn:hover {
+            transform: rotate(-2deg) scale(1.05);
+        }
+
+        .explore-btn:active {
+            transform: rotate(-2deg) scale(0.98);
+        }
+
+        /* ── Browse section + fanned covers ── */
+        .browse-section {
+            width: 100%;
+            max-width: 340px;
+            margin-top: 32px;
+        }
+
+        .browse-divider {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .browse-line {
+            flex: 1;
+            height: 1px;
+            background: rgba(27,42,74,0.15);
+        }
+
+        .browse-text {
+            font-family: 'Caveat', cursive;
+            font-size: 16px;
+            color: var(--navy);
+            opacity: 0.5;
+            white-space: nowrap;
+        }
+
+        .cover-fan {
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            height: 140px;
+            position: relative;
+            padding: 0 10px;
+        }
+
+        .fan-cover {
+            width: 90px;
+            aspect-ratio: 3 / 4;
+            border-radius: 4px;
+            overflow: hidden;
+            border: 2px solid var(--navy);
+            box-shadow: 3px 4px 8px rgba(27,42,74,0.25);
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            transform: rotate(var(--rot));
+            z-index: var(--z);
+            margin: 0 -8px;
+            flex-shrink: 0;
+        }
+
+        .fan-cover img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .fan-cover:hover {
+            transform: rotate(var(--rot)) translateY(-12px) scale(1.08);
+            box-shadow: 4px 8px 16px rgba(27,42,74,0.35);
+            z-index: 10;
+        }
+
+        .fan-cover:active {
+            transform: rotate(var(--rot)) scale(0.95);
+        }
+
+        /* ════════════════════════════════════════════
+           SCREEN 2 — AGE SELECT  ("Who Are You?")
+           ════════════════════════════════════════════ */
+        #ageScreen {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .screen-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 36px 20px 12px;
+        }
+
+        .back-btn {
+            width: 36px; height: 36px;
+            border: 1.5px solid var(--navy);
+            background-color: transparent;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.3s ease;
+            color: var(--navy);
+        }
+        .back-btn:hover { background-color: var(--amber); transform: scale(1.1); }
+
+        .screen-title {
+            font-family: 'Kalam', cursive;
+            font-weight: 700;
+            font-size: 22px;
+            color: var(--navy);
+        }
+
+        /* Full-page comic grid */
+        .comic-page {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 4px;
+            padding: 0 10px 10px;
+        }
+
+        /* Individual comic panel */
+        .comic-panel {
+            cursor: pointer;
+            border-radius: 4px;
+            overflow: hidden;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .comic-panel:hover {
+            transform: scale(1.02);
+            box-shadow: 0 2px 8px rgba(27,42,74,0.15);
+        }
+
+        .comic-panel:active {
+            transform: scale(0.98);
+        }
+
+        /* Panel illustration */
+        .panel-illustration {
+            width: 100%;
+            height: 100%;
+        }
+
+        .panel-illustration img {
+            width: 100%;
+            height: 100%;
+            object-fit: fill;
+            display: block;
+        }
+
+
+        /* ════════════════════════════════════════════
+           SCREEN 3 — DEPTH  ("How thick is your comic?")
+           ════════════════════════════════════════════ */
+        #depthScreen {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .depth-body {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px 24px 60px;
+        }
+
+        .depth-subtitle {
+            font-family: 'Caveat', cursive;
+            font-size: 18px;
+            color: var(--navy);
+            opacity: 0.6;
+            margin-bottom: 32px;
+            text-align: center;
+        }
+
+        /* ── Stacked books ── */
+        .book-stack {
+            display: flex;
+            flex-direction: column-reverse;
+            align-items: flex-start;
+            gap: 14px;
+            position: relative;
+            margin-bottom: 48px;
+            width: 100%;
+            max-width: 320px;
+        }
+
+        .book-row {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+            width: 100%;
+        }
+
+        .book-row:hover { transform: translateX(8px); }
+        .book-row:active { transform: translateX(4px) scale(0.98); }
+
+        .book {
+            display: flex;
+            flex-direction: row;
+            position: relative;
+            filter: drop-shadow(3px 4px 2px rgba(27,42,74,0.15));
+        }
+
+        .book-spine {
+            width: 14px;
+            border-radius: 6px 0 0 6px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .book-face {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            z-index: 1;
+            border: 2px solid rgba(27,42,74,0.25);
+            border-left: none;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .book-face::after {
+            content: '';
+            position: absolute;
+            top: 30%;
+            left: 8px; right: 8px;
+            height: 1px;
+            background: rgba(255,255,255,0.15);
+        }
+
+        .book-pages-edge {
+            width: 16px;
+            background: repeating-linear-gradient(
+                to bottom,
+                #f8f4ec 0px,
+                #f8f4ec 1.5px,
+                #e8e2d6 1.5px,
+                #e8e2d6 2.5px
+            );
+            border-radius: 0 3px 3px 0;
+            border: 2px solid rgba(27,42,74,0.15);
+            border-left: 1px solid rgba(27,42,74,0.1);
+            z-index: 0;
+        }
+
+        .book-icon {
+            color: rgba(255,255,255,0.8);
+            filter: drop-shadow(1px 1px 0px rgba(0,0,0,0.2));
+        }
+
+        .spine-text {
+            position: absolute;
+            left: 50%; top: 50%;
+            transform: translate(-50%, -50%) rotate(-90deg);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 7px;
+            font-weight: 700;
+            color: rgba(255,255,255,0.6);
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        /* All books same width so labels align */
+        .book { min-width: 180px; }
+
+        /* Deep Dive — THICK (bottom) */
+        .book-deep .book-spine { height: 80px; background: linear-gradient(to right, #0f1d38, var(--navy), #1e3258); }
+        .book-deep .book-face  { width: 148px; height: 80px; background: linear-gradient(135deg, #1e3258, var(--navy)); }
+        .book-deep .book-pages-edge { height: 76px; }
+        .book-deep .book-icon  { font-size: 28px; }
+
+        /* Full Story — MEDIUM (middle) */
+        .book-full .book-spine { height: 54px; background: linear-gradient(to right, #8b2020, #b83232, #a02828); }
+        .book-full .book-face  { width: 148px; height: 54px; background: linear-gradient(135deg, #c23a3a, #a02828); }
+        .book-full .book-pages-edge { height: 50px; }
+        .book-full .book-icon  { font-size: 22px; }
+
+        /* Quick Read — THIN (top) */
+        .book-quick .book-spine { height: 30px; background: linear-gradient(to right, #1a6b4a, #22885e, #1d7a54); }
+        .book-quick .book-face  { width: 148px; height: 30px; background: linear-gradient(135deg, #2a9d6a, #1d7a54); }
+        .book-quick .book-pages-edge { height: 26px; }
+        .book-quick .book-icon  { font-size: 16px; }
+
+        /* Labels */
+        .book-label {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+        }
+
+        .book-label-name {
+            font-family: 'Kalam', cursive;
+            font-weight: 700;
+            font-size: 18px;
+            color: var(--navy);
+            line-height: 1.1;
+        }
+
+        .book-label-pages {
+            font-family: 'DM Sans', sans-serif;
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--amber);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 2px;
+        }
+
+        .book-label-desc {
+            font-family: 'Caveat', cursive;
+            font-size: 14px;
+            color: var(--slate);
+            line-height: 1.2;
+            margin-top: 1px;
+        }
+
+        /* Table surface */
+        .table-surface {
+            width: 100%;
+            max-width: 320px;
+            height: 6px;
+            background: linear-gradient(to bottom, #c4a882, #a8906e);
+            border-radius: 2px;
+            box-shadow: 0 3px 6px rgba(27,42,74,0.12);
+            margin-top: 4px;
+        }
+
+        .table-shadow {
+            width: 240px;
+            height: 12px;
+            background: radial-gradient(ellipse, rgba(27,42,74,0.08) 0%, transparent 70%);
+            margin-top: 2px;
+        }
+
+        .book-row.selected .book-face {
+            border-color: var(--amber);
+            box-shadow: 0 0 12px rgba(245,158,11,0.4);
+        }
+
+        /* ════════════════════════════════════════════
+           SCREEN 4 — NARRATIVE STYLE (Flip Cards)
+           ════════════════════════════════════════════ */
+        #narrativeScreen {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .narrative-subtitle {
+            font-family: 'Caveat', cursive;
+            font-size: 16px;
+            color: var(--navy);
+            opacity: 0.5;
+            text-align: center;
+            padding: 0 24px 4px;
+        }
+
+        .narrative-scroll-area {
+            flex: 1;
+            overflow-x: auto;
+            overflow-y: hidden;
+            scroll-snap-type: x mandatory;
+            display: flex;
+            align-items: stretch;
+            gap: 14px;
+            padding: 4px 20px 8px;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .narrative-scroll-area::-webkit-scrollbar { display: none; }
+        .narrative-scroll-area { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* ── Flip card container ── */
+        .flip-card {
+            flex: 0 0 260px;
+            min-height: 0;
+            scroll-snap-align: center;
+            perspective: 800px;
+            cursor: pointer;
+        }
+
+        .flip-card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            transform-style: preserve-3d;
+        }
+
+        .flip-card.flipped .flip-card-inner {
+            transform: rotateY(180deg);
+        }
+
+        .flip-card-front,
+        .flip-card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+            border-radius: 16px;
+            border: 3px solid var(--navy);
+            overflow: hidden;
+            box-shadow: 3px 4px 0px rgba(27,42,74,0.12);
+        }
+
+        /* ── FRONT: image + title overlay ── */
+        .flip-card-front {
+            background: white;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .flip-card-front img {
+            width: 100%;
+            flex: 1;
+            object-fit: cover;
+            display: block;
+        }
+
+        .flip-card-front .card-title-bar {
+            padding: 10px 14px;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .flip-card-front .card-title-bar .card-name {
+            font-family: 'Kalam', cursive;
+            font-weight: 700;
+            font-size: 17px;
+            color: var(--navy);
+            line-height: 1.15;
+        }
+
+        .flip-card-front .card-title-bar .flip-hint {
+            font-size: 14px;
+            color: var(--slate);
+            opacity: 0.5;
+            flex-shrink: 0;
+        }
+
+        /* ── BACK: description ── */
+        .flip-card-back {
+            transform: rotateY(180deg);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 28px 22px;
+            text-align: center;
+        }
+
+        .flip-card-back .back-title {
+            font-family: 'Kalam', cursive;
+            font-weight: 700;
+            font-size: 22px;
+            color: white;
+            margin-bottom: 10px;
+            line-height: 1.2;
+        }
+
+        .flip-card-back .back-headline {
+            font-family: 'Caveat', cursive;
+            font-size: 22px;
+            color: rgba(255,255,255,0.9);
+            font-weight: 700;
+            line-height: 1.3;
+            margin-bottom: 8px;
+            max-width: 200px;
+        }
+
+        .flip-card-back .back-desc {
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13px;
+            color: rgba(255,255,255,0.7);
+            line-height: 1.4;
+            margin-bottom: 20px;
+            max-width: 200px;
+        }
+
+        .flip-card-back .choose-btn {
+            padding: 10px 28px;
+            font-family: 'Kalam', cursive;
+            font-weight: 700;
+            font-size: 16px;
+            color: var(--navy);
+            background: var(--amber);
+            border: 2px solid var(--navy);
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 2px 2px 0px rgba(27,42,74,0.2);
+            transition: transform 0.2s ease;
+        }
+
+        .flip-card-back .choose-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .flip-card-back .choose-btn:active {
+            transform: scale(0.97);
+        }
+
+        .flip-card-back .tap-back-hint {
+            font-family: 'Caveat', cursive;
+            font-size: 13px;
+            color: rgba(255,255,255,0.4);
+            margin-top: 12px;
+        }
+
+        /* Selected state */
+        .flip-card.selected .flip-card-front,
+        .flip-card.selected .flip-card-back {
+            border-color: var(--amber);
+            box-shadow: 0 0 0 3px var(--amber), 4px 6px 16px rgba(245,158,11,0.3);
+        }
+
+        /* Scroll hint dots */
+        .scroll-dots {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            padding: 4px 0 14px;
+        }
+
+        .scroll-dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            background: rgba(27,42,74,0.15);
+            transition: background 0.3s ease, transform 0.3s ease;
+        }
+
+        .scroll-dot.active {
+            background: var(--amber);
+            transform: scale(1.3);
+        }
+
+        /* ════════════════════════════════════════════
+           SCREEN 5 — VISUAL STYLE (Full-bleed snap cards)
+           ════════════════════════════════════════════ */
+        #visualScreen {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .visual-subtitle {
+            font-family: 'Caveat', cursive;
+            font-size: 16px;
+            color: var(--navy);
+            opacity: 0.5;
+            text-align: center;
+            padding: 0 24px 4px;
+        }
+
+        .style-scroll {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            scroll-snap-type: y mandatory;
+            padding: 4px 16px;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .style-scroll::-webkit-scrollbar { display: none; }
+        .style-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+
+        .style-tile {
+            width: 100%;
+            height: calc(100% - 16px);
+            border-radius: 16px;
+            overflow: hidden;
+            border: 3px solid var(--navy);
+            cursor: pointer;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: 3px 4px 0px rgba(27,42,74,0.1);
+            margin-bottom: 16px;
+            scroll-snap-align: start;
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .style-tile:last-child { margin-bottom: 0; }
+
+        .style-tile:active { transform: scale(0.98); }
+
+        .style-tile.selected {
+            border-color: var(--amber);
+            box-shadow: 0 0 0 3px var(--amber), 4px 6px 16px rgba(245,158,11,0.25);
+        }
+
+        .style-tile-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: top center;
+            display: block;
+        }
+
+        /* Name overlay at bottom of image */
+        .style-tile-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 40px 16px 14px;
+            background: linear-gradient(to top, rgba(27,42,74,0.85) 0%, rgba(27,42,74,0.4) 50%, transparent 100%);
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+        }
+
+        .style-tile-name {
+            font-family: 'Kalam', cursive;
+            font-weight: 700;
+            font-size: 20px;
+            color: white;
+            line-height: 1.15;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+        }
+
+        /* Check badge on selected tile */
+        .style-tile .check-badge {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            width: 32px; height: 32px;
+            background: var(--amber);
+            border: 2px solid var(--navy);
+            border-radius: 50%;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            color: var(--navy);
+            font-weight: 700;
+            box-shadow: 2px 2px 0px rgba(27,42,74,0.2);
+        }
+
+        .style-tile.selected .check-badge {
+            display: flex;
+        }
+
+        /* Sticky confirm button */
+        .visual-confirm {
+            padding: 10px 16px 16px;
+            display: none;
+        }
+
+        .visual-confirm.visible { display: block; }
+
+        .visual-confirm-btn {
+            width: 100%;
+            padding: 14px;
+            font-family: 'Kalam', cursive;
+            font-weight: 700;
+            font-size: 18px;
+            color: var(--navy);
+            background: var(--amber);
+            border: 3px solid var(--navy);
+            border-radius: 10px;
+            cursor: pointer;
+            box-shadow: 3px 3px 0px var(--navy);
+            transition: transform 0.2s ease;
+            letter-spacing: 0.5px;
+        }
+
+        .visual-confirm-btn:hover { transform: scale(1.02); }
+        .visual-confirm-btn:active { transform: scale(0.97); box-shadow: 1px 1px 0px var(--navy); }
+
+        /* Surprise Me tile */
+        .style-tile.surprise-tile {
+            background: var(--navy);
+            overflow: hidden;
+        }
+
+        .surprise-inner {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            position: relative;
+        }
+
+        .surprise-emoji {
+            font-size: 48px;
+            animation: surpriseSpin 3s ease-in-out infinite;
+        }
+
+        @keyframes surpriseSpin {
+            0%, 100% { transform: rotate(0deg) scale(1); }
+            25% { transform: rotate(10deg) scale(1.1); }
+            50% { transform: rotate(-5deg) scale(1); }
+            75% { transform: rotate(5deg) scale(1.05); }
+        }
+
+        .surprise-title {
+            font-family: 'Kalam', cursive;
+            font-weight: 700;
+            font-size: 22px;
+            color: white;
+        }
+
+        .surprise-desc {
+            font-family: 'Caveat', cursive;
+            font-size: 17px;
+            color: rgba(255,255,255,0.6);
+        }
+
+        /* Floating style fragments */
+        .surprise-inner::before,
+        .surprise-inner::after {
+            content: '';
+            position: absolute;
+            border-radius: 50%;
+            opacity: 0.08;
+            background: var(--amber);
+        }
+        .surprise-inner::before {
+            width: 200px; height: 200px;
+            top: -40px; right: -60px;
+            animation: floatBlob 6s ease-in-out infinite;
+        }
+        .surprise-inner::after {
+            width: 150px; height: 150px;
+            bottom: -30px; left: -40px;
+            animation: floatBlob 6s ease-in-out infinite reverse;
+        }
+
+        @keyframes floatBlob {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(15px, -15px) scale(1.1); }
+        }
+
+        /* ════════════════════════════════════════════
+           PERSONA DRAWER (slides up on narrative screen)
+           ════════════════════════════════════════════ */
+        .persona-drawer {
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            background: var(--cream);
+            border-top: 3px solid var(--navy);
+            border-radius: 20px 20px 0 0;
+            padding: 16px 16px 24px;
+            transform: translateY(100%);
+            transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            z-index: 20;
+            max-height: 75%;
+            overflow-y: auto;
+        }
+
+        .persona-drawer.open { transform: translateY(0); }
+
+        .persona-drawer-handle {
+            width: 36px; height: 4px;
+            background: rgba(27,42,74,0.15);
+            border-radius: 2px;
+            margin: 0 auto 12px;
+        }
+
+        .persona-drawer-title {
+            font-family: 'Kalam', cursive;
+            font-weight: 700;
+            font-size: 18px;
+            color: var(--navy);
+            text-align: center;
+            margin-bottom: 6px;
+        }
+
+        .persona-drawer-context {
+            font-family: 'Comic Neue', cursive;
+            font-size: 13px;
+            color: var(--slate);
+            text-align: center;
+            line-height: 1.4;
+            padding: 0 8px;
+            margin-bottom: 14px;
+        }
+
+        .persona-cards {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .persona-card {
+            display: flex;
+            gap: 12px;
+            padding: 12px;
+            background: white;
+            border: 2px solid rgba(27,42,74,0.1);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .persona-card:active { transform: scale(0.98); }
+
+        .persona-card.selected {
+            border-color: var(--amber);
+            box-shadow: 0 0 0 2px var(--amber), 2px 3px 8px rgba(245,158,11,0.15);
+        }
+
+        .persona-avatar {
+            width: 40px; height: 40px;
+            border-radius: 50%;
+            background: var(--navy);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Kalam', cursive;
+            font-weight: 700;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+
+        .persona-info { flex: 1; min-width: 0; }
+
+        .persona-name {
+            font-family: 'Kalam', cursive;
+            font-weight: 700;
+            font-size: 14px;
+            color: var(--navy);
+            line-height: 1.2;
+        }
+
+        .persona-role {
+            font-family: 'DM Sans', sans-serif;
+            font-size: 11px;
+            color: var(--teal);
+            font-weight: 500;
+            margin-bottom: 3px;
+        }
+
+        .persona-desc {
+            font-family: 'Comic Neue', cursive;
+            font-size: 12px;
+            color: var(--slate);
+            line-height: 1.35;
+        }
+
+        .persona-confirm {
+            margin-top: 14px;
+            width: 100%;
+            padding: 12px;
+            font-family: 'Kalam', cursive;
+            font-weight: 700;
+            font-size: 16px;
+            color: var(--navy);
+            background: var(--amber);
+            border: 3px solid var(--navy);
+            border-radius: 10px;
+            cursor: pointer;
+            box-shadow: 3px 3px 0px var(--navy);
+            transition: transform 0.2s ease;
+            display: none;
+        }
+
+        .persona-confirm.visible { display: block; }
+        .persona-confirm:hover { transform: scale(1.02); }
+        .persona-confirm:active { transform: scale(0.97); box-shadow: 1px 1px 0px var(--navy); }
+
+        /* Topic screen character identity */
+        .topic-character {
+            margin-top: 14px;
+            padding: 10px 16px;
+            background: var(--navy);
+            border-radius: 10px;
+            max-width: 300px;
+        }
+
+        .topic-character-label {
+            font-family: 'Caveat', cursive;
+            font-size: 13px;
+            color: var(--amber);
+            margin-bottom: 2px;
+        }
+
+        .topic-character-name {
+            font-family: 'Kalam', cursive;
+            font-weight: 700;
+            font-size: 16px;
+            color: white;
+            line-height: 1.2;
+        }
+
+        .topic-character-hook {
+            font-family: 'Comic Neue', cursive;
+            font-size: 12px;
+            color: rgba(255,255,255,0.6);
+            line-height: 1.3;
+            margin-top: 4px;
+        }
+
+        /* Reader character overlay */
+        .reader-character-overlay {
+            position: absolute;
+            bottom: 16px; left: 16px; right: 16px;
+            background: rgba(27,42,74,0.85);
+            padding: 10px 14px;
+            border-radius: 10px;
+            z-index: 8;
+            text-align: center;
+            transition: opacity 0.6s ease;
+        }
+
+        .reader-character-overlay.fade-out {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .reader-character-overlay-text {
+            font-family: 'Caveat', cursive;
+            font-size: 16px;
+            color: rgba(255,255,255,0.9);
+        }
+
+        /* ════════════════════════════════════════════
+           SCREEN — GENERATING / LOADING
+           ════════════════════════════════════════════ */
+        #generatingScreen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            background: var(--cream);
+            overflow: hidden;
+        }
+
+        .gen-canvas {
+            width: 180px;
+            height: 240px;
+            border-radius: 8px;
+            border: 3px solid var(--navy);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 4px 6px 0px rgba(27,42,74,0.12);
+            margin-bottom: 28px;
+            background: white;
+        }
+
+        /* Pencil sketch lines that draw in */
+        .gen-sketch {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+        }
+
+        .gen-sketch-line {
+            position: absolute;
+            background: rgba(27,42,74,0.15);
+            border-radius: 1px;
+            transform: scaleX(0);
+            transform-origin: left;
+        }
+
+        /* Panel grid lines */
+        .gen-panel-h {
+            height: 2px;
+            left: 12px; right: 12px;
+        }
+        .gen-panel-v {
+            width: 2px;
+            top: 12px; bottom: 12px;
+        }
+
+        /* Ink outlines */
+        .gen-ink {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+        }
+
+        .gen-ink-shape {
+            position: absolute;
+            border: 2px solid var(--navy);
+            border-radius: 6px;
+            transform: scale(0);
+            opacity: 0;
+        }
+
+        /* Color fills */
+        .gen-color {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+        }
+
+        .gen-color-block {
+            position: absolute;
+            border-radius: 4px;
+            transform: scale(0);
+            opacity: 0;
+        }
+
+        /* Speech bubbles */
+        .gen-bubble {
+            position: absolute;
+            background: white;
+            border: 2px solid var(--navy);
+            border-radius: 12px;
+            padding: 4px 8px;
+            font-family: 'Comic Neue', cursive;
+            font-size: 7px;
+            color: var(--navy);
+            opacity: 0;
+            transform: scale(0);
+        }
+
+        .gen-bubble::after {
+            content: '';
+            position: absolute;
+            bottom: -6px; left: 14px;
+            width: 8px; height: 6px;
+            background: white;
+            border-right: 2px solid var(--navy);
+            border-bottom: 2px solid var(--navy);
+            transform: skewX(-20deg);
+        }
+
+        /* Stage text */
+        .gen-status {
+            font-family: 'Kalam', cursive;
+            font-weight: 700;
+            font-size: 18px;
+            color: var(--navy);
+            margin-bottom: 6px;
+            min-height: 28px;
+            text-align: center;
+        }
+
+        .gen-substatus {
+            font-family: 'Caveat', cursive;
+            font-size: 15px;
+            color: var(--slate);
+            text-align: center;
+        }
+
+        /* Progress bar */
+        .gen-progress-wrap {
+            width: 200px;
+            height: 6px;
+            background: rgba(27,42,74,0.08);
+            border-radius: 3px;
+            margin-top: 16px;
+            overflow: hidden;
+        }
+
+        .gen-progress-bar {
+            height: 100%;
+            width: 0%;
+            background: var(--amber);
+            border-radius: 3px;
+            transition: width 0.6s ease;
+        }
+
+        /* Pencil icon that "draws" */
+        .gen-pencil {
+            position: absolute;
+            font-size: 20px;
+            opacity: 0;
+            z-index: 5;
+            filter: drop-shadow(1px 1px 2px rgba(0,0,0,0.2));
+            transition: opacity 0.3s ease;
+        }
+
+        /* Animations */
+        @keyframes sketchDraw {
+            0% { transform: scaleX(0); opacity: 0; }
+            10% { opacity: 1; }
+            100% { transform: scaleX(1); opacity: 1; }
+        }
+
+        @keyframes inkPop {
+            0% { transform: scale(0); opacity: 0; }
+            60% { transform: scale(1.1); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        @keyframes colorFill {
+            0% { transform: scale(0); opacity: 0; }
+            50% { transform: scale(1.05); opacity: 0.8; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        @keyframes pencilMove {
+            0% { top: 20px; left: 15px; transform: rotate(-30deg); }
+            25% { top: 80px; left: 120px; transform: rotate(-25deg); }
+            50% { top: 140px; left: 30px; transform: rotate(-35deg); }
+            75% { top: 190px; left: 110px; transform: rotate(-20deg); }
+            100% { top: 210px; left: 60px; transform: rotate(-30deg); }
+        }
+
+        /* ════════════════════════════════════════════
+           SCREEN 6 — TOPIC SUMMARY
+           ════════════════════════════════════════════ */
+        #topicScreen {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            background: var(--cream);
+        }
+
+        .topic-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 24px;
+            text-align: center;
+        }
+
+        .topic-cover-img {
+            width: 200px;
+            height: 260px;
+            object-fit: cover;
+            border-radius: 12px;
+            border: 3px solid var(--navy);
+            box-shadow: 4px 6px 0px rgba(27,42,74,0.15);
+            margin-bottom: 24px;
+        }
+
+        .topic-title {
+            font-family: 'Kalam', cursive;
+            font-weight: 700;
+            font-size: 22px;
+            color: var(--navy);
+            line-height: 1.3;
+            margin-bottom: 12px;
+        }
+
+        .topic-question {
+            font-family: 'Caveat', cursive;
+            font-size: 19px;
+            color: var(--slate);
+            line-height: 1.45;
+            max-width: 280px;
+            margin-bottom: 16px;
+            font-style: italic;
+        }
+
+        .topic-age-badge {
+            display: inline-block;
+            margin-top: 16px;
+            padding: 4px 14px;
+            background: var(--navy);
+            color: var(--amber);
+            font-family: 'Kalam', cursive;
+            font-weight: 700;
+            font-size: 13px;
+            border-radius: 20px;
+        }
+
+        .topic-start-btn {
+            margin: 0 24px 32px;
+            padding: 14px;
+            font-family: 'Kalam', cursive;
+            font-weight: 700;
+            font-size: 18px;
+            color: var(--navy);
+            background: var(--amber);
+            border: 3px solid var(--navy);
+            border-radius: 10px;
+            cursor: pointer;
+            box-shadow: 3px 3px 0px var(--navy);
+            transition: transform 0.2s ease;
+            letter-spacing: 0.5px;
+        }
+
+        .topic-start-btn:hover { transform: scale(1.02); }
+        .topic-start-btn:active { transform: scale(0.97); box-shadow: 1px 1px 0px var(--navy); }
+
+        /* ════════════════════════════════════════════
+           SCREEN 7 — COMIC READER (Page Flip)
+           ════════════════════════════════════════════ */
+        #readerScreen {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            background: #1a1a1a;
+            overflow: hidden;
+        }
+
+        .reader-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 40px 16px 8px;
+            background: rgba(26,26,26,0.95);
+            z-index: 10;
+        }
+
+        .reader-back-btn {
+            background: none;
+            border: none;
+            color: rgba(255,255,255,0.7);
+            font-size: 22px;
+            cursor: pointer;
+            padding: 4px 8px;
+        }
+
+        .reader-page-num {
+            font-family: 'Caveat', cursive;
+            font-size: 15px;
+            color: rgba(255,255,255,0.5);
+        }
+
+        .reader-close-btn {
+            background: none;
+            border: none;
+            color: rgba(255,255,255,0.7);
+            font-size: 18px;
+            cursor: pointer;
+            padding: 4px 8px;
+        }
+
+        .reader-viewport {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            touch-action: pan-y;
+        }
+
+        .reader-page {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+                        opacity 0.4s ease;
+            will-change: transform;
+        }
+
+        .reader-page img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        .reader-page.current { transform: translateX(0); opacity: 1; }
+        .reader-page.prev { transform: translateX(-100%); opacity: 0; }
+        .reader-page.next { transform: translateX(100%); opacity: 0; }
+        .reader-page.hidden { display: none; }
+
+        /* Tap zones */
+        .reader-tap-left,
+        .reader-tap-right {
+            position: absolute;
+            top: 0;
+            height: 100%;
+            width: 40%;
+            z-index: 5;
+            cursor: pointer;
+        }
+
+        .reader-tap-left { left: 0; }
+        .reader-tap-right { right: 0; }
+
+        /* Page indicator dots */
+        .reader-dots {
+            display: flex;
+            justify-content: center;
+            gap: 4px;
+            padding: 8px 16px 24px;
+            flex-wrap: wrap;
+            max-width: 100%;
+        }
+
+        .reader-dot {
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            transition: background 0.3s ease, transform 0.3s ease;
+        }
+
+        .reader-dot.active {
+            background: var(--amber);
+            transform: scale(1.3);
+        }
+
+        /* ════════════════════════════════════════════
+           SCREEN 8 — THE END
+           ════════════════════════════════════════════ */
+        #endScreen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            background: var(--navy);
+            text-align: center;
+            padding: 40px 24px;
+        }
+
+        .end-badge {
+            width: 80px; height: 80px;
+            background: var(--amber);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            margin-bottom: 24px;
+            border: 3px solid rgba(255,255,255,0.2);
+            box-shadow: 0 4px 20px rgba(245,158,11,0.3);
+        }
+
+        .end-title {
+            font-family: 'Kalam', cursive;
+            font-weight: 700;
+            font-size: 32px;
+            color: white;
+            margin-bottom: 8px;
+        }
+
+        .end-subtitle {
+            font-family: 'Caveat', cursive;
+            font-size: 18px;
+            color: rgba(255,255,255,0.6);
+            margin-bottom: 32px;
+        }
+
+        .end-status {
+            font-family: 'Kalam', cursive;
+            font-weight: 700;
+            font-size: 14px;
+            color: var(--amber);
+            letter-spacing: 1.5px;
+            padding: 8px 20px;
+            border: 2px solid var(--amber);
+            border-radius: 20px;
+            margin-bottom: 40px;
+        }
+
+        .end-restart-btn {
+            padding: 14px 40px;
+            font-family: 'Kalam', cursive;
+            font-weight: 700;
+            font-size: 16px;
+            color: var(--navy);
+            background: var(--amber);
+            border: 3px solid rgba(255,255,255,0.2);
+            border-radius: 10px;
+            cursor: pointer;
+            box-shadow: 3px 3px 0px rgba(0,0,0,0.3);
+            transition: transform 0.2s ease;
+        }
+
+        .end-restart-btn:hover { transform: scale(1.05); }
+        .end-restart-btn:active { transform: scale(0.97); }
+
+        /* ── Responsive ── */
+        @media (max-height: 850px) {
+            .phone-frame { height: 95vh; width: calc(95vh * 375 / 812); }
+        }
+
+        @media (max-width: 420px) {
+            .phone-frame { border: none; border-radius: 0; width: 100%; height: 100%; box-shadow: none; }
+            .phone-frame::before, .phone-frame::after { display: none; }
+            .app-container { border-radius: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="phone-frame">
+    <div class="app-container">
+
+        <!-- ═══════ LANDING SCREEN ═══════ -->
+        <div id="landingScreen" class="screen active" onclick="goToQuestion()">
+            <div class="landing-top">
+                <div class="logo">StoryLens</div>
+                <div class="tagline">comics made especially for you</div>
+            </div>
+            <div class="landing-video">
+                <video autoplay loop muted playsinline>
+                    <source src="storylens_video.mp4" type="video/mp4">
+                </video>
+                <div class="tap-hint">tap anywhere to start</div>
+            </div>
+        </div>
+
+        <!-- ═══════ QUESTION SCREEN ═══════ -->
+        <div id="homeScreen" class="screen">
+            <div class="main-question">
+                What happened in the world that you want to understand?
+            </div>
+
+            <div class="bubble-input-wrap">
+                <input
+                    type="text"
+                    id="questionInput"
+                    class="bubble-input"
+                    placeholder=""
+                >
+                <div class="ghost-text" id="ghostText"><span id="ghostContent"></span><span class="cursor"></span></div>
+            </div>
+
+            <button class="explore-btn" onclick="goToAgeScreen()">LET'S GO</button>
+
+            <!-- Browse prompt + fanned covers -->
+            <div class="browse-section">
+                <div class="browse-divider">
+                    <span class="browse-line"></span>
+                    <span class="browse-text">Not sure? Pick a story</span>
+                    <span class="browse-line"></span>
+                </div>
+
+                <div class="cover-fan">
+                    <div class="fan-cover" style="--i:0; --rot:-12deg; --z:1;" onclick="pickCover(0)">
+                        <img src="covers/1.png" alt="The Apps That Wouldn't Let Go">
+                    </div>
+                    <div class="fan-cover" style="--i:1; --rot:-4deg; --z:2;" onclick="pickCover(1)">
+                        <img src="covers/2.jpeg" alt="The Iran War">
+                    </div>
+                    <div class="fan-cover" style="--i:2; --rot:4deg; --z:3;" onclick="pickCover(2)">
+                        <img src="covers/3.jpeg" alt="Olympics: What's Happening This Year?">
+                    </div>
+                    <div class="fan-cover" style="--i:3; --rot:12deg; --z:4;" onclick="pickCover(3)">
+                        <img src="covers/4.png" alt="AI Taking Jobs">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════ AGE SELECTION — "Who Are You?" ═══════ -->
+        <div id="ageScreen" class="screen">
+            <div class="screen-header">
+                <button class="back-btn" onclick="goToQuestion()">&#8592;</button>
+                <div class="screen-title">Who Are You?</div>
+            </div>
+
+            <div class="comic-page">
+                <div class="comic-panel" onclick="selectAge('8-10')">
+                    <div class="panel-illustration"><img src="panel_8_10.png" alt="Young Explorers 8-10"></div>
+                </div>
+                <div class="comic-panel" onclick="selectAge('11-13')">
+                    <div class="panel-illustration"><img src="panel_11_13.png" alt="Curious Minds 11-13"></div>
+                </div>
+                <div class="comic-panel" onclick="selectAge('14-16')">
+                    <div class="panel-illustration"><img src="panel_14_16.png" alt="Sharp Thinkers 14-16"></div>
+                </div>
+                <div class="comic-panel" onclick="selectAge('17-18')">
+                    <div class="panel-illustration"><img src="panel_17_18.png" alt="Deep Readers 17-18"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════ DEPTH SELECTION — "How thick is your comic?" ═══════ -->
+        <div id="depthScreen" class="screen">
+            <div class="screen-header">
+                <button class="back-btn" onclick="goToAgeScreen()">&#8592;</button>
+                <div class="screen-title">How Thick Is Your Comic?</div>
+            </div>
+
+            <div class="depth-body">
+                <p class="depth-subtitle">Pick the size of your read.</p>
+
+                <div class="book-stack">
+                    <!-- Bottom: Deep Dive (thickest) -->
+                    <div class="book-row" onclick="selectDepth(this, 'Deep Dive', '30–48 pages')">
+                        <div class="book book-deep">
+                            <div class="book-spine"><span class="spine-text">DEEP DIVE</span></div>
+                            <div class="book-face"><span class="book-icon">&#128218;</span></div>
+                            <div class="book-pages-edge"></div>
+                        </div>
+                        <div class="book-label">
+                            <span class="book-label-name">Deep Dive</span>
+                            <span class="book-label-pages">30–48 pages</span>
+                            <span class="book-label-desc">Every layer explored</span>
+                        </div>
+                    </div>
+
+                    <!-- Middle: Full Story -->
+                    <div class="book-row" onclick="selectDepth(this, 'Full Story', '16–28 pages')">
+                        <div class="book book-full">
+                            <div class="book-spine"><span class="spine-text">FULL</span></div>
+                            <div class="book-face"><span class="book-icon">&#128196;</span></div>
+                            <div class="book-pages-edge"></div>
+                        </div>
+                        <div class="book-label">
+                            <span class="book-label-name">Full Story</span>
+                            <span class="book-label-pages">16–28 pages</span>
+                            <span class="book-label-desc">The complete picture</span>
+                        </div>
+                    </div>
+
+                    <!-- Top: Quick Read (thinnest) -->
+                    <div class="book-row" onclick="selectDepth(this, 'Quick Read', '8–14 pages')">
+                        <div class="book book-quick">
+                            <div class="book-spine"><span class="spine-text">QUICK</span></div>
+                            <div class="book-face"><span class="book-icon">&#9889;</span></div>
+                            <div class="book-pages-edge"></div>
+                        </div>
+                        <div class="book-label">
+                            <span class="book-label-name">Quick Read</span>
+                            <span class="book-label-pages">8–14 pages</span>
+                            <span class="book-label-desc">The headline story</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-surface"></div>
+                <div class="table-shadow"></div>
+            </div>
+        </div>
+
+        <!-- ═══════ NARRATIVE STYLE — "How do you want to hear the story?" ═══════ -->
+        <div id="narrativeScreen" class="screen">
+            <div class="screen-header">
+                <button class="back-btn" onclick="goToDepthScreen()">&#8592;</button>
+                <div class="screen-title">How Do You Want to Hear It?</div>
+            </div>
+            <p class="narrative-subtitle">Tap a card to flip it over</p>
+
+            <div class="narrative-scroll-area" id="narrativeScroll">
+
+                <!-- 1. The Detective -->
+                <div class="flip-card" data-name="The Investigation">
+                    <div class="flip-card-inner">
+                        <div class="flip-card-front">
+                            <img src="narrative%20img/1.png" alt="The Investigation">
+                            <div class="card-title-bar">
+                                <span class="card-name">The Investigation</span>
+                                <span class="flip-hint">&#8635;</span>
+                            </div>
+                        </div>
+                        <div class="flip-card-back" style="background: linear-gradient(135deg, #1e3258, #2d4a7a);">
+                            <div class="back-title">The Investigation</div>
+                            <div class="back-headline">Follow the clues. Crack the case.</div>
+                            <div class="back-desc">Something's not adding up. Figure out what's really going on.</div>
+                            <button class="choose-btn" onclick="event.stopPropagation(); selectNarrative('The Investigation')">PICK THIS ONE</button>
+                            <div class="tap-back-hint">tap to flip back</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. The Time Jumper -->
+                <div class="flip-card" data-name="Time Traveler">
+                    <div class="flip-card-inner">
+                        <div class="flip-card-front">
+                            <img src="narrative%20img/2.png" alt="Time Traveler">
+                            <div class="card-title-bar">
+                                <span class="card-name">Time Traveler</span>
+                                <span class="flip-hint">&#8635;</span>
+                            </div>
+                        </div>
+                        <div class="flip-card-back" style="background: linear-gradient(135deg, #4c1d95, #7c3aed);">
+                            <div class="back-title">Time Traveler</div>
+                            <div class="back-headline">Jump through time. See how we got here.</div>
+                            <div class="back-desc">Go back to where it all started and zoom forward to now.</div>
+                            <button class="choose-btn" onclick="event.stopPropagation(); selectNarrative('Time Traveler')">PICK THIS ONE</button>
+                            <div class="tap-back-hint">tap to flip back</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. The Referee -->
+                <div class="flip-card" data-name="The Debate">
+                    <div class="flip-card-inner">
+                        <div class="flip-card-front">
+                            <img src="narrative%20img/3.png" alt="The Debate">
+                            <div class="card-title-bar">
+                                <span class="card-name">The Debate</span>
+                                <span class="flip-hint">&#8635;</span>
+                            </div>
+                        </div>
+                        <div class="flip-card-back" style="background: linear-gradient(135deg, #92400e, #d97706);">
+                            <div class="back-title">The Debate</div>
+                            <div class="back-headline">Hear every side. You be the judge.</div>
+                            <div class="back-desc">People disagree. Hear them out, then make up your own mind.</div>
+                            <button class="choose-btn" onclick="event.stopPropagation(); selectNarrative('The Debate')">PICK THIS ONE</button>
+                            <div class="tap-back-hint">tap to flip back</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4. The Shape-Shifter -->
+                <div class="flip-card" data-name="Through Their Eyes">
+                    <div class="flip-card-inner">
+                        <div class="flip-card-front">
+                            <img src="narrative%20img/4.png" alt="Through Their Eyes">
+                            <div class="card-title-bar">
+                                <span class="card-name">Through Their Eyes</span>
+                                <span class="flip-hint">&#8635;</span>
+                            </div>
+                        </div>
+                        <div class="flip-card-back" style="background: linear-gradient(135deg, #0e7490, #06b6d4);">
+                            <div class="back-title">Through Their Eyes</div>
+                            <div class="back-headline">Walk in someone's shoes.</div>
+                            <div class="back-desc">Feel what they feel. See the world the way they do.</div>
+                            <button class="choose-btn" onclick="event.stopPropagation(); selectNarrative('Through Their Eyes')">PICK THIS ONE</button>
+                            <div class="tap-back-hint">tap to flip back</div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="scroll-dots" id="scrollDots">
+                <div class="scroll-dot active"></div>
+                <div class="scroll-dot"></div>
+                <div class="scroll-dot"></div>
+                <div class="scroll-dot"></div>
+            </div>
+
+            <!-- Persona Drawer -->
+            <div class="persona-drawer" id="personaDrawer">
+                <div class="persona-drawer-handle"></div>
+                <div class="persona-drawer-title">Choose a Perspective</div>
+                <div class="persona-drawer-context">NASA's Artemis II mission just launched 4 astronauts toward the Moon. It's the first time humans have gone this far in over 50 years. Whose eyes do you want to see it through?</div>
+                <div class="persona-cards">
+                    <div class="persona-card" onclick="selectPersona(this, 0)">
+                        <div class="persona-avatar">CK</div>
+                        <div class="persona-info">
+                            <div class="persona-name">Christina Koch</div>
+                            <div class="persona-role">American, Mission Specialist</div>
+                            <div class="persona-desc">The first woman to travel past Earth orbit. She's already spent a year in space, but nothing could prepare her for how far from home this mission goes.</div>
+                        </div>
+                    </div>
+                    <div class="persona-card" onclick="selectPersona(this, 1)">
+                        <div class="persona-avatar">CC</div>
+                        <div class="persona-info">
+                            <div class="persona-name">Charles Camarda</div>
+                            <div class="persona-role">American, Former NASA Astronaut</div>
+                            <div class="persona-desc">He used to fly to space himself. Now he's on the ground, telling the world this mission isn't safe. He watches the launch, hoping he's wrong.</div>
+                        </div>
+                    </div>
+                    <div class="persona-card" onclick="selectPersona(this, 2)">
+                        <div class="persona-avatar">MC</div>
+                        <div class="persona-info">
+                            <div class="persona-name">Mission Controller</div>
+                            <div class="persona-role">American, Houston Flight Control</div>
+                            <div class="persona-desc">They have to say 'Go' for the engine burn that sends the crew to the Moon. Once it fires, there's no turning back.</div>
+                        </div>
+                    </div>
+                    <div class="persona-card" onclick="selectPersona(this, 3)">
+                        <div class="persona-avatar">JH</div>
+                        <div class="persona-info">
+                            <div class="persona-name">Jeremy Hansen</div>
+                            <div class="persona-role">Canadian, Astronaut</div>
+                            <div class="persona-desc">The first person from outside America heading to the Moon. A whole country's dreams ride on one small flag patch on his shoulder.</div>
+                        </div>
+                    </div>
+                    <div class="persona-card" onclick="selectPersona(this, 4)">
+                        <div class="persona-avatar">VG</div>
+                        <div class="persona-info">
+                            <div class="persona-name">Victor Glover</div>
+                            <div class="persona-role">American, Pilot</div>
+                            <div class="persona-desc">The first Black astronaut to leave Earth orbit. History is watching every move, but right now he just needs to fly the ship.</div>
+                        </div>
+                    </div>
+                </div>
+                <button class="persona-confirm" id="personaConfirm" onclick="confirmPersona()">CONTINUE</button>
+            </div>
+        </div>
+
+        <!-- ═══════ VISUAL STYLE — "What should your comic look like?" ═══════ -->
+        <div id="visualScreen" class="screen">
+            <div class="screen-header">
+                <button class="back-btn" onclick="goToNarrativeScreen()">&#8592;</button>
+                <div class="screen-title">What Should It Look Like?</div>
+            </div>
+            <p class="visual-subtitle">Pick the art style for your comic</p>
+
+            <div class="style-scroll">
+
+                <div class="style-tile" onclick="selectVisual(this, 'Storybook Hero')">
+                    <div class="check-badge">&#10003;</div>
+                    <img class="style-tile-img" src="Style_img/1.png" alt="Storybook Hero">
+                    <div class="style-tile-overlay">
+                        <span class="style-tile-name">Storybook Hero</span>
+                    </div>
+                </div>
+
+                <div class="style-tile" onclick="selectVisual(this, 'Painted World')">
+                    <div class="check-badge">&#10003;</div>
+                    <img class="style-tile-img" src="Style_img/2.png" alt="Painted World">
+                    <div class="style-tile-overlay">
+                        <span class="style-tile-name">Painted World</span>
+                    </div>
+                </div>
+
+                <div class="style-tile" onclick="selectVisual(this, 'Pop Editorial')">
+                    <div class="check-badge">&#10003;</div>
+                    <img class="style-tile-img" src="Style_img/3.png" alt="Pop Editorial">
+                    <div class="style-tile-overlay">
+                        <span class="style-tile-name">Pop Editorial</span>
+                    </div>
+                </div>
+
+                <div class="style-tile" onclick="selectVisual(this, 'Manga Action Report')">
+                    <div class="check-badge">&#10003;</div>
+                    <img class="style-tile-img" src="Style_img/4.png" alt="Manga Action Report">
+                    <div class="style-tile-overlay">
+                        <span class="style-tile-name">Manga Action Report</span>
+                    </div>
+                </div>
+
+                <div class="style-tile surprise-tile" onclick="selectVisual(this, 'Surprise Me')">
+                    <div class="check-badge">&#10003;</div>
+                    <div class="surprise-inner">
+                        <span class="surprise-emoji">&#127922;</span>
+                        <span class="surprise-title">Surprise Me!</span>
+                        <span class="surprise-desc">We'll pick the perfect style for you</span>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="visual-confirm" id="visualConfirm">
+                <button class="visual-confirm-btn" onclick="confirmVisual()">CREATE MY COMIC</button>
+            </div>
+        </div>
+
+        <!-- ═══════ GENERATING SCREEN ═══════ -->
+        <div id="generatingScreen" class="screen">
+            <div class="gen-canvas" id="genCanvas">
+                <!-- Pencil -->
+                <div class="gen-pencil" id="genPencil">&#9998;</div>
+
+                <!-- Sketch layer: panel grid lines -->
+                <div class="gen-sketch" id="genSketch">
+                    <div class="gen-sketch-line gen-panel-h" style="top:33%"></div>
+                    <div class="gen-sketch-line gen-panel-h" style="top:66%"></div>
+                    <div class="gen-sketch-line gen-panel-v" style="left:50%; top:0; bottom:66%"></div>
+                    <div class="gen-sketch-line gen-panel-v" style="left:45%; top:33%; bottom:0"></div>
+                    <!-- Extra sketch marks -->
+                    <div class="gen-sketch-line" style="top:18%; left:15%; width:30%; height:1px"></div>
+                    <div class="gen-sketch-line" style="top:22%; left:55%; width:25%; height:1px"></div>
+                    <div class="gen-sketch-line" style="top:50%; left:10%; width:20%; height:1px"></div>
+                    <div class="gen-sketch-line" style="top:80%; left:55%; width:30%; height:1px"></div>
+                    <div class="gen-sketch-line" style="top:85%; left:60%; width:20%; height:1px"></div>
+                </div>
+
+                <!-- Ink layer: character shapes -->
+                <div class="gen-ink" id="genInk">
+                    <div class="gen-ink-shape" style="top:6%; left:10%; width:30%; height:22%"></div>
+                    <div class="gen-ink-shape" style="top:6%; left:55%; width:35%; height:22%"></div>
+                    <div class="gen-ink-shape" style="top:36%; left:8%; width:35%; height:26%"></div>
+                    <div class="gen-ink-shape" style="top:36%; left:52%; width:40%; height:14%"></div>
+                    <div class="gen-ink-shape" style="top:54%; left:52%; width:40%; height:10%"></div>
+                    <div class="gen-ink-shape" style="top:70%; left:10%; width:80%; height:24%"></div>
+                </div>
+
+                <!-- Color layer -->
+                <div class="gen-color" id="genColor">
+                    <div class="gen-color-block" style="top:8%; left:12%; width:26%; height:18%; background:var(--teal); opacity:0.3;"></div>
+                    <div class="gen-color-block" style="top:8%; left:57%; width:31%; height:18%; background:var(--amber); opacity:0.3;"></div>
+                    <div class="gen-color-block" style="top:38%; left:10%; width:31%; height:22%; background:var(--terracotta); opacity:0.3;"></div>
+                    <div class="gen-color-block" style="top:72%; left:12%; width:76%; height:20%; background:var(--rose); opacity:0.25;"></div>
+                </div>
+
+                <!-- Speech bubbles pop in last -->
+                <div class="gen-bubble" id="genBubble1" style="top:12%; left:18%;">Wow!</div>
+                <div class="gen-bubble" id="genBubble2" style="top:42%; left:14%;">Let's go!</div>
+                <div class="gen-bubble" id="genBubble3" style="top:76%; left:40%;">Whoa...</div>
+            </div>
+
+            <div class="gen-status" id="genStatus">Sketching panels...</div>
+            <div class="gen-substatus" id="genSubstatus">laying out your story</div>
+            <div class="gen-progress-wrap">
+                <div class="gen-progress-bar" id="genProgress"></div>
+            </div>
+        </div>
+
+        <!-- ═══════ TOPIC SUMMARY SCREEN ═══════ -->
+        <div id="topicScreen" class="screen">
+            <div class="screen-header">
+                <button class="back-btn" onclick="goToVisualScreen()">&#8592;</button>
+                <div class="screen-title">Your Comic</div>
+            </div>
+            <div class="topic-content">
+                <img class="topic-cover-img" id="topicCover" src="pages/Cover.jpg" alt="Comic Cover">
+                <div class="topic-question" id="topicQuestion">Why is it so hard to stop scrolling — and are the people who made these apps in trouble for it?</div>
+                <div class="topic-title" id="topicTitle">The Case of the Apps That Wouldn't Let Go</div>
+                <div class="topic-age-badge" id="topicBadge">Ages 8 — 10 &bull; 12 Pages</div>
+                <div class="topic-character" id="topicCharacter" style="display:none;">
+                    <div class="topic-character-label">You are...</div>
+                    <div class="topic-character-name" id="topicCharName"></div>
+                    <div class="topic-character-hook" id="topicCharHook"></div>
+                </div>
+            </div>
+            <button class="topic-start-btn" onclick="goToReader()">START READING</button>
+        </div>
+
+        <!-- ═══════ COMIC READER SCREEN ═══════ -->
+        <div id="readerScreen" class="screen">
+            <div class="reader-header">
+                <button class="reader-back-btn" onclick="goToTopic()">&#8592;</button>
+                <span class="reader-page-num" id="readerPageNum">Cover</span>
+                <button class="reader-close-btn" onclick="goToTopic()">&#10005;</button>
+            </div>
+            <div class="reader-viewport" id="readerViewport">
+                <div class="reader-tap-left" onclick="flipPage(-1)"></div>
+                <div class="reader-tap-right" onclick="flipPage(1)"></div>
+                <div class="reader-character-overlay" id="readerCharOverlay" style="display:none;">
+                    <div class="reader-character-overlay-text" id="readerCharText"></div>
+                </div>
+            </div>
+            <div class="reader-dots" id="readerDots"></div>
+        </div>
+
+        <!-- ═══════ END SCREEN ═══════ -->
+        <div id="endScreen" class="screen">
+            <div class="end-badge">&#9733;</div>
+            <div class="end-title">The End!</div>
+            <div class="end-subtitle">You finished the whole comic</div>
+            <div class="end-status">TRUTH-HUNTING CONTINUES!</div>
+            <button class="end-restart-btn" onclick="goHome()">EXPLORE MORE</button>
+        </div>
+
+    </div>
+    </div>
+
+    <script>
+        // ────────────────────────────────────────────
+        //  BACKEND WIRING
+        //  Kicks off the real 6-phase pipeline on the server.
+        //  Phase 1 (Claude with web_search) runs as soon as the
+        //  user submits a topic. While they pick age/depth/narrative/
+        //  visual, Phase 1 progresses in parallel. The Generating
+        //  screen polls and reports status. Studio (/admin.html) is
+        //  where you review/refine each artifact before approving.
+        // ────────────────────────────────────────────
+        let storyId = null;
+        let pollTimer = null;
+        // Which phase the Generating screen is currently waiting for approval on.
+        // One of 'phase1', 'phase2', 'phase3', 'phase5'. Drives the polling logic.
+        let awaitingPhase = 'phase1';
+
+        async function apiCall(path, opts) {
+            opts = opts || {};
+            const res = await fetch(path, {
+                method: opts.method || 'GET',
+                headers: { 'Content-Type': 'application/json' },
+                body: opts.body !== undefined ? JSON.stringify(opts.body) : undefined,
+            });
+            if (!res.ok) throw new Error(res.status + ' ' + await res.text());
+            return res.json();
+        }
+
+        async function backendCreateStory(topic) {
+            try {
+                const r = await apiCall('/api/stories', { method: 'POST', body: { topic: topic } });
+                storyId = r.storyId;
+                if (r.warning) console.warn('[storylens]', r.warning);
+                console.log('[storylens] story', storyId, 'kicked off Phase 1');
+            } catch (e) {
+                console.error('[storylens] createStory failed', e);
+            }
+        }
+
+        async function backendPatch(patch) {
+            if (!storyId) return;
+            try {
+                await apiCall('/api/stories/' + storyId, { method: 'PATCH', body: patch });
+            } catch (e) {
+                console.error('[storylens] patch failed', e);
+            }
+        }
+
+        // ── State ──
+        let currentScreen = 'landing';
+
+        // ── Screen nav ──
+        function showScreen(name) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(name + 'Screen').classList.add('active');
+            currentScreen = name;
+        }
+
+        function goToQuestion() { showScreen('home'); startTypewriter(); }
+        function goHome() { showScreen('landing'); }
+        function goToAgeScreen() { showScreen('age'); }
+        function goToDepthScreen() { showScreen('depth'); }
+        function goToNarrativeScreen() { closePersonaDrawer(); showScreen('narrative'); initScrollDots(); }
+        function goToVisualScreen() { showScreen('visual'); }
+
+        // ── Age selection (no loading gate — just stores selection and moves to Depth) ──
+        function selectAge(age) {
+            backendPatch({ ageBand: age });
+            goToDepthScreen();
+        }
+
+        // ── Depth selection — completes age+length, then gates on Phase 2 approval ──
+        const DEPTH_KEY = { 'Quick Read': 'quick', 'Full Story': 'full', 'Deep Dive': 'deep' };
+        function selectDepth(el, name, pages) {
+            document.querySelectorAll('.book-row').forEach(r => r.classList.remove('selected'));
+            el.classList.add('selected');
+            el.style.transform = 'translateX(20px) scale(1.02)';
+            backendPatch({ length: DEPTH_KEY[name] || 'full' });
+            setTimeout(() => {
+                el.style.transform = '';
+                awaitingPhase = 'phase2';
+                goToGenerating();
+            }, 350);
+        }
+
+        // ── Flip card logic ──
+        document.addEventListener('click', function(e) {
+            const flipCard = e.target.closest('.flip-card');
+            if (!flipCard) return;
+            // Don't flip if clicking the choose button
+            if (e.target.closest('.choose-btn')) return;
+            flipCard.classList.toggle('flipped');
+        });
+
+        // ── Narrative selection ──
+        const NARRATIVE_KEY = {
+            'The Investigation': 'investigation',
+            'Time Traveler': 'time-traveler',
+            'The Debate': 'debate',
+            'Through Their Eyes': 'walk-in-shoes',
+        };
+        function selectNarrative(name) {
+            document.querySelectorAll('.flip-card').forEach(c => c.classList.remove('selected'));
+            const card = document.querySelector('.flip-card[data-name="' + name + '"]');
+            if (card) card.classList.add('selected');
+
+            backendPatch({ narrativeStyle: NARRATIVE_KEY[name] || 'investigation' });
+
+            // Walk-in-Shoes: open persona drawer for ANY topic, fetch personas live
+            if (name === 'Through Their Eyes') {
+                setTimeout(() => {
+                    document.getElementById('personaDrawer').classList.add('open');
+                    void loadDynamicPersonas();
+                }, 300);
+                return;
+            }
+
+            // Other narrative styles: straight to Phase 3 loading gate
+            setTimeout(() => {
+                awaitingPhase = 'phase3';
+                goToGenerating();
+            }, 300);
+        }
+
+        // Replace the hardcoded persona cards with personas generated for the actual topic.
+        async function loadDynamicPersonas() {
+            const cardsEl = document.querySelector('.persona-cards');
+            if (!cardsEl || !storyId) return;
+            const contextEl = document.querySelector('.persona-drawer-context');
+
+            // Loading state
+            cardsEl.innerHTML = '<div style="padding:24px;text-align:center;font-family:\'Comic Neue\',cursive;color:var(--slate);">Finding people whose story this is...</div>';
+            if (contextEl) contextEl.textContent = 'Whose eyes do you want to see this story through?';
+
+            try {
+                const r = await apiCall('/api/stories/' + storyId + '/personas', { method: 'POST' });
+                const list = r.personas || [];
+                if (list.length === 0) throw new Error('No personas returned');
+
+                // Render the real personas using the same DOM shape the prototype uses
+                cardsEl.innerHTML = '';
+                list.forEach((p, idx) => {
+                    const card = document.createElement('div');
+                    card.className = 'persona-card';
+                    card.onclick = function() { selectPersona(this, idx); };
+                    card.innerHTML =
+                        '<div class="persona-avatar">' + (p.initials || '??') + '</div>' +
+                        '<div class="persona-info">' +
+                            '<div class="persona-name">' + p.name + '</div>' +
+                            '<div class="persona-role">' + (p.role || '') + '</div>' +
+                            '<div class="persona-desc">' + (p.desc || '') + '</div>' +
+                        '</div>';
+                    cardsEl.appendChild(card);
+                });
+                // Replace the global personas array so selectPersona() picks the right one
+                personas.length = 0;
+                list.forEach(p => personas.push({ name: p.name, hook: p.desc, role: p.role, initials: p.initials }));
+            } catch (e) {
+                console.error('[storylens] persona fetch failed', e);
+                cardsEl.innerHTML =
+                    '<div style="padding:24px;text-align:center;font-family:\'Comic Neue\',cursive;color:#7f1d1d;">' +
+                    'Couldn\'t generate personas. ' + (e.message || '') +
+                    '<br><br><button onclick="loadDynamicPersonas()" style="padding:6px 14px;border:1px solid var(--navy);background:white;border-radius:6px;cursor:pointer;">Retry</button>' +
+                    '</div>';
+            }
+        }
+        window.loadDynamicPersonas = loadDynamicPersonas;
+
+        // ── Persona selection ──
+        const personas = [
+            { name: 'Christina Koch', hook: 'The first woman past Earth orbit. She\'s already spent a year in space, but nothing prepared her for how far this mission goes.' },
+            { name: 'Charles Camarda', hook: 'A former astronaut watching from the ground, convinced the ship isn\'t safe, hoping he\'s wrong.' },
+            { name: 'Mission Controller', hook: 'The person in Houston who has to say "Go" knowing there\'s no undo button.' },
+            { name: 'Jeremy Hansen', hook: 'A Canadian astronaut carrying a whole country\'s dreams to the Moon on one small flag patch.' },
+            { name: 'Victor Glover', hook: 'The first Black astronaut to leave Earth orbit, focused on flying the ship while history watches.' }
+        ];
+        let selectedPersona = null;
+
+        function selectPersona(el, idx) {
+            document.querySelectorAll('.persona-card').forEach(c => c.classList.remove('selected'));
+            el.classList.add('selected');
+            selectedPersona = personas[idx];
+            document.getElementById('personaConfirm').classList.add('visible');
+        }
+
+        function confirmPersona() {
+            if (selectedPersona) {
+                const initials = selectedPersona.initials
+                    || selectedPersona.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+                backendPatch({ persona: {
+                    name: selectedPersona.name,
+                    desc: selectedPersona.hook,
+                    role: selectedPersona.role || '',
+                    initials: initials,
+                }});
+            }
+            document.getElementById('personaDrawer').classList.remove('open');
+            setTimeout(() => {
+                awaitingPhase = 'phase3';
+                goToGenerating();
+            }, 350);
+        }
+
+        function closePersonaDrawer() {
+            document.getElementById('personaDrawer').classList.remove('open');
+            document.querySelectorAll('.persona-card').forEach(c => c.classList.remove('selected'));
+            document.getElementById('personaConfirm').classList.remove('visible');
+            selectedPersona = null;
+        }
+
+        // ── Visual style selection ──
+        const VISUAL_KEY = {
+            'Storybook Hero': 'storybook-hero',
+            'Painted World': 'painted-world',
+            'Pop Editorial': 'pop-editorial',
+            'Manga Action Report': 'manga-action-report',
+            'Surprise Me': 'surprise-me',
+        };
+        let pendingVisual = null;
+        function selectVisual(el, name) {
+            document.querySelectorAll('.style-tile').forEach(t => t.classList.remove('selected'));
+            el.classList.add('selected');
+            pendingVisual = VISUAL_KEY[name] || 'storybook-hero';
+            document.getElementById('visualConfirm').classList.add('visible');
+        }
+
+        // ── Comic Library ──
+        const comics = {
+            socialmedia: {
+                question: "Why is it so hard to stop scrolling — and are the people who made these apps in trouble for it?",
+                title: "The Case of the Apps That Wouldn't Let Go",
+                cover: "pages/Cover.jpg",
+                badge: "Ages 8 — 10 \u2022 12 Pages",
+                pages: [
+                    { src: 'pages/Cover.jpg', label: 'Cover' },
+                    { src: 'pages/Intro.png', label: 'Intro' },
+                    { src: 'pages/pg1.jpg', label: 'Page 1' },
+                    { src: 'pages/pg2.jpg', label: 'Page 2' },
+                    { src: 'pages/pg3.jpg', label: 'Page 3' },
+                    { src: 'pages/pg4.jpg', label: 'Page 4' },
+                    { src: 'pages/pg5.jpg', label: 'Page 5' },
+                    { src: 'pages/pg6.jpg', label: 'Page 6' },
+                    { src: 'pages/pg7.jpg', label: 'Page 7' },
+                    { src: 'pages/pg8.jpg', label: 'Page 8' },
+                    { src: 'pages/pg9.jpg', label: 'Page 9' },
+                    { src: 'pages/pg10.jpg', label: 'Page 10' },
+                    { src: 'pages/pg11.jpg', label: 'Page 11' },
+                    { src: 'pages/pg12.jpg', label: 'Page 12' }
+                ]
+            },
+            artemis: {
+                question: "What happens when humans finally go back to the Moon after 53 years — and is the spaceship actually safe?",
+                title: "Artemis II: The Weight of a Flag That Isn't Yours",
+                cover: "pages/artemis/1.png?v=2",
+                badge: "Ages 14 — 16 \u2022 14 Pages",
+                keywords: ['artemis', 'moon', 'lunar', 'nasa', 'space', 'rocket', 'astronaut', 'orion', 'sls'],
+                pages: [
+                    { src: 'pages/artemis/1.png?v=2', label: 'Cover' },
+                    { src: 'pages/artemis/2.png?v=2', label: 'Page 1' },
+                    { src: 'pages/artemis/3.png?v=2', label: 'Page 2' },
+                    { src: 'pages/artemis/4.png?v=2', label: 'Page 3' },
+                    { src: 'pages/artemis/5.png?v=2', label: 'Page 4' },
+                    { src: 'pages/artemis/6.png?v=2', label: 'Page 5' },
+                    { src: 'pages/artemis/7.png?v=2', label: 'Page 6' },
+                    { src: 'pages/artemis/8.png?v=2', label: 'Page 7' },
+                    { src: 'pages/artemis/9.png?v=2', label: 'Page 8' },
+                    { src: 'pages/artemis/10.png?v=2', label: 'Page 9' },
+                    { src: 'pages/artemis/11.jpeg?v=2', label: 'Page 10' },
+                    { src: 'pages/artemis/12.jpeg?v=2', label: 'Page 11' },
+                    { src: 'pages/artemis/13.jpeg?v=2', label: 'Page 12' },
+                    { src: 'pages/artemis/14.jpeg?v=2', label: 'Page 13' }
+                ]
+            },
+            iran: {
+                question: "Why did the US and Israel attack Iran, and what happened to the people caught in the middle?",
+                title: "How Did We Get Here? The 2026 Iran War, Told Backwards",
+                cover: "pages/iran/1.png",
+                badge: "Ages 11 — 13 \u2022 22 Pages",
+                keywords: ['iran', 'war', 'middle east', 'tehran', 'khamenei', 'strait', 'hormuz', 'ceasefire', 'hezbollah'],
+                pages: [
+                    { src: 'pages/iran/1.png', label: 'Cover' },
+                    { src: 'pages/iran/2.png', label: 'Page 1' },
+                    { src: 'pages/iran/3.png', label: 'Page 2' },
+                    { src: 'pages/iran/4.png', label: 'Page 3' },
+                    { src: 'pages/iran/5.png', label: 'Page 4' },
+                    { src: 'pages/iran/6.png', label: 'Page 5' },
+                    { src: 'pages/iran/7.png', label: 'Page 6' },
+                    { src: 'pages/iran/8.png', label: 'Page 7' },
+                    { src: 'pages/iran/9.png', label: 'Page 8' },
+                    { src: 'pages/iran/10.png', label: 'Page 9' },
+                    { src: 'pages/iran/11.png', label: 'Page 10' },
+                    { src: 'pages/iran/12.png', label: 'Page 11' },
+                    { src: 'pages/iran/13.png', label: 'Page 12' },
+                    { src: 'pages/iran/14.png', label: 'Page 13' },
+                    { src: 'pages/iran/15.png', label: 'Page 14' },
+                    { src: 'pages/iran/16.png', label: 'Page 15' },
+                    { src: 'pages/iran/17.png', label: 'Page 16' },
+                    { src: 'pages/iran/18.png', label: 'Page 17' },
+                    { src: 'pages/iran/19.png', label: 'Page 18' },
+                    { src: 'pages/iran/20.png', label: 'Page 19' },
+                    { src: 'pages/iran/21.png', label: 'Page 20' },
+                    { src: 'pages/iran/22.png', label: 'Page 21' },
+                    { src: 'pages/iran/23.png', label: 'Page 22' }
+                ]
+            }
+        };
+
+        let activeComic = 'socialmedia';
+
+        function detectComic() {
+            const input = qInput.value.toLowerCase();
+            for (const [key, comic] of Object.entries(comics)) {
+                if (comic.keywords && comic.keywords.some(kw => input.includes(kw))) {
+                    return key;
+                }
+            }
+            return 'socialmedia'; // default
+        }
+
+        function confirmVisual() {
+            activeComic = detectComic();
+            if (pendingVisual) backendPatch({ visualStyleId: pendingVisual });
+            awaitingPhase = 'phase5a';
+            goToGenerating();
+        }
+
+        // ── Generating / Loading Animation ──
+        function goToGenerating() {
+            showScreen('generating');
+            runGeneratingAnimation();
+        }
+
+        function runGeneratingAnimation() {
+            // Visual stages — these just play through once for the look.
+            // Real progress comes from the backend poll below.
+            const progress = document.getElementById('genProgress');
+            const status = document.getElementById('genStatus');
+            const sub = document.getElementById('genSubstatus');
+            const pencil = document.getElementById('genPencil');
+            const sketch = document.getElementById('genSketch');
+            const ink = document.getElementById('genInk');
+            const color = document.getElementById('genColor');
+
+            progress.style.width = '0%';
+            pencil.style.opacity = '0';
+            sketch.style.opacity = '0';
+            ink.style.opacity = '0';
+            color.style.opacity = '0';
+            document.querySelectorAll('.gen-sketch-line').forEach(l => { l.style.animation = 'none'; });
+            document.querySelectorAll('.gen-ink-shape').forEach(s => { s.style.animation = 'none'; });
+            document.querySelectorAll('.gen-color-block').forEach(b => { b.style.animation = 'none'; });
+            document.querySelectorAll('.gen-bubble').forEach(b => { b.style.animation = 'none'; b.style.opacity = '0'; });
+
+            // Visual stage timing (kept from prototype)
+            setTimeout(() => {
+                pencil.style.opacity = '1';
+                pencil.style.animation = 'pencilMove 2s ease-in-out forwards';
+                sketch.style.opacity = '1';
+                document.querySelectorAll('.gen-sketch-line').forEach((l, i) => {
+                    l.style.animation = 'sketchDraw 0.5s ease-out ' + (i * 0.15) + 's forwards';
+                });
+            }, 200);
+            setTimeout(() => {
+                pencil.style.opacity = '0';
+                ink.style.opacity = '1';
+                document.querySelectorAll('.gen-ink-shape').forEach((s, i) => {
+                    s.style.animation = 'inkPop 0.4s ease-out ' + (i * 0.2) + 's forwards';
+                });
+            }, 2200);
+            setTimeout(() => {
+                color.style.opacity = '1';
+                document.querySelectorAll('.gen-color-block').forEach((b, i) => {
+                    b.style.animation = 'colorFill 0.5s ease-out ' + (i * 0.25) + 's forwards';
+                });
+            }, 4000);
+            setTimeout(() => {
+                document.querySelectorAll('.gen-bubble').forEach((b, i) => {
+                    b.style.animation = 'inkPop 0.35s ease-out ' + (i * 0.3) + 's forwards';
+                });
+            }, 5500);
+
+            // Backend poll — drives status text + progress bar + navigation.
+            if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+            if (!storyId) {
+                // No backend connection (e.g. offline). Fall back to demo timing.
+                status.textContent = 'Drawing your comic...';
+                sub.textContent = '(demo — no backend)';
+                progress.style.width = '100%';
+                setTimeout(goToTopic, 7800);
+                return;
+            }
+
+            let banner = document.getElementById('genBanner');
+            if (!banner) {
+                banner = document.createElement('div');
+                banner.id = 'genBanner';
+                banner.style.cssText = 'margin-top:16px;max-width:300px;text-align:center;font-family:"Comic Neue",cursive;font-size:12px;color:var(--navy);display:none;';
+                document.getElementById('generatingScreen').appendChild(banner);
+            }
+
+            function reviewBanner(msg) {
+                return '<div style="padding:12px 16px;background:rgba(245,158,11,0.15);border:2px solid var(--amber);border-radius:10px;">' +
+                    msg + '<br>' +
+                    '<a href="/admin.html#/stories/' + storyId + '" target="_blank" style="color:var(--navy);font-weight:700;text-decoration:underline;">Open Studio →</a>' +
+                    '</div>';
+            }
+            function errorBanner(msg) {
+                return '<div style="padding:12px 16px;background:#fee2e2;border:2px solid #ef4444;border-radius:10px;color:#7f1d1d;">' +
+                    (msg || 'unknown error') +
+                    '<br><a href="/admin.html#/stories/' + storyId + '" target="_blank" style="color:#7f1d1d;font-weight:700;">View in Studio →</a></div>';
+            }
+
+            // Per-phase config: which phase to inspect, what to say, where to go on approval.
+            // For phases that aren't wired yet (3, 5), the loading screen will sit at
+            // "starting…" forever until we wire them in subsequent builds.
+            const PHASE_CONFIG = {
+                phase1: {
+                    label: 'Researching your story',
+                    runSub: 'Gemini is searching the web',
+                    reviewMsg: 'Your news doc is ready to review!',
+                    progressBase: 5, progressMax: 30,
+                    onApproved: () => showScreen('age'),
+                    notWiredHint: null,
+                },
+                phase2: {
+                    label: 'Calibrating for your age',
+                    runSub: 'Gemini is reshaping the story',
+                    reviewMsg: 'Your age-calibrated story is ready to review!',
+                    progressBase: 35, progressMax: 55,
+                    onApproved: () => showScreen('narrative'),
+                    notWiredHint: null,
+                },
+                phase3: {
+                    label: 'Choosing your narrator',
+                    runSub: 'Gemini is restyling the story',
+                    reviewMsg: 'Your narrative draft is ready to review!',
+                    progressBase: 60, progressMax: 75,
+                    onApproved: () => showScreen('visual'),
+                    notWiredHint: null,
+                },
+                phase5a: {
+                    label: 'Writing your comic script',
+                    runSub: 'Gemini is planning panels, dialogue, and Mira\'s appearances',
+                    reviewMsg: 'Your comic script is ready to review!',
+                    progressBase: 78, progressMax: 85,
+                    onApproved: () => { awaitingPhase = 'phase5b'; goToGenerating(); },
+                    notWiredHint: null,
+                },
+                phase5b: {
+                    label: 'Preparing image instructions',
+                    runSub: 'Converting script into per-page image prompts',
+                    reviewMsg: 'Your image playbook is ready to review!',
+                    progressBase: 86, progressMax: 92,
+                    onApproved: () => { awaitingPhase = 'phase6'; goToGenerating(); },
+                    notWiredHint: null,
+                },
+                phase6: {
+                    label: 'Drawing your comic',
+                    runSub: 'Gemini is generating each page',
+                    reviewMsg: 'All pages generated — open Studio to review',
+                    progressBase: 93, progressMax: 100,
+                    onApproved: () => goToTopic(),
+                    notWiredHint: null,
+                },
+            };
+
+            async function pollOnce() {
+                try {
+                    const s = await apiCall('/api/stories/' + storyId);
+                    const cfg = PHASE_CONFIG[awaitingPhase] || PHASE_CONFIG.phase1;
+                    // The story-state field key for this phase
+                    const p = (s.phases || {})[awaitingPhase];
+
+                    // Not wired yet — show hint and don't navigate
+                    if (cfg.notWiredHint && !p) {
+                        status.textContent = cfg.label;
+                        sub.textContent = cfg.notWiredHint;
+                        progress.style.width = cfg.progressBase + '%';
+                        banner.style.display = 'block';
+                        banner.innerHTML = '<div style="padding:12px 16px;background:#f1f5f9;border:1px dashed #94a3b8;border-radius:10px;font-size:12px;">' +
+                            cfg.notWiredHint + '<br>' +
+                            '<a href="#" onclick="event.preventDefault();PHASE_CONFIG[\'' + awaitingPhase + '\'].onApproved();" style="color:var(--navy);font-weight:700;">Skip ahead →</a></div>';
+                        return;
+                    }
+
+                    if (!p || p.status === 'pending') {
+                        status.textContent = cfg.label;
+                        sub.textContent = 'getting ready';
+                        progress.style.width = cfg.progressBase + '%';
+                        banner.style.display = 'none';
+                        return;
+                    }
+                    if (p.status === 'running') {
+                        status.textContent = cfg.label;
+                        if (awaitingPhase === 'phase6') {
+                            // Show "Page X of N" using artifacts.pages count
+                            const pageCount = (s.artifacts && s.artifacts.pages) ? s.artifacts.pages.length : 0;
+                            const hasCover = !!(s.artifacts && s.artifacts.cover);
+                            const generated = pageCount + (hasCover ? 1 : 0);
+                            sub.textContent = generated > 0 ? 'Page ' + generated + ' done…' : cfg.runSub;
+                            const pct = cfg.progressBase + Math.min((cfg.progressMax - cfg.progressBase) * 0.9, generated * 3);
+                            progress.style.width = pct + '%';
+                        } else if (awaitingPhase === 'phase1') {
+                            const calls = p.toolCalls || [];
+                            const last = calls[calls.length - 1];
+                            sub.textContent = last ? 'Searching: ' + last.detail.slice(0, 40) : cfg.runSub;
+                            const pct = cfg.progressBase + Math.min((cfg.progressMax - cfg.progressBase) * 0.5, calls.length * 3);
+                            progress.style.width = pct + '%';
+                        } else {
+                            sub.textContent = cfg.runSub;
+                            progress.style.width = (cfg.progressBase + (cfg.progressMax - cfg.progressBase) * 0.4) + '%';
+                        }
+                        banner.style.display = 'none';
+                        return;
+                    }
+                    if (p.status === 'awaiting-review') {
+                        status.textContent = 'Ready for review';
+                        sub.textContent = 'open Studio to approve';
+                        progress.style.width = cfg.progressMax + '%';
+                        banner.style.display = 'block';
+                        banner.innerHTML = reviewBanner(cfg.reviewMsg);
+                        return;
+                    }
+                    if (p.status === 'approved') {
+                        status.textContent = 'Approved!';
+                        sub.textContent = 'moving forward';
+                        progress.style.width = cfg.progressMax + '%';
+                        banner.style.display = 'none';
+                        clearInterval(pollTimer); pollTimer = null;
+                        setTimeout(() => cfg.onApproved(), 600);
+                        return;
+                    }
+                    if (p.status === 'error') {
+                        status.textContent = cfg.label + ' failed';
+                        sub.textContent = p.error || 'check Studio';
+                        progress.style.width = '100%';
+                        banner.style.display = 'block';
+                        banner.innerHTML = errorBanner(p.error);
+                        clearInterval(pollTimer); pollTimer = null;
+                        return;
+                    }
+                } catch (e) {
+                    console.error('[storylens] poll failed', e);
+                }
+            }
+            // Expose PHASE_CONFIG so the "Skip ahead" link inside the not-wired banner can find it
+            window.PHASE_CONFIG = PHASE_CONFIG;
+            pollOnce();
+            pollTimer = setInterval(pollOnce, 2000);
+        }
+
+        // Holds the real generated story (from backend) once Phase 6 is done.
+        // Falls back to mock `comics[activeComic]` if not available yet.
+        let realStory = null;
+
+        async function loadRealStory() {
+            if (!storyId) return null;
+            try {
+                const s = await apiCall('/api/stories/' + storyId);
+                if (s.artifacts && s.artifacts.cover && (s.artifacts.pages || []).length > 0) {
+                    return s;
+                }
+            } catch (e) { console.warn('[storylens] loadRealStory failed', e); }
+            return null;
+        }
+
+        async function goToTopic() {
+            realStory = await loadRealStory();
+
+            if (realStory) {
+                const a = realStory.artifacts;
+                document.getElementById('topicCover').src = a.cover;
+                document.getElementById('topicQuestion').textContent = realStory.selections.topic || 'Your topic';
+                document.getElementById('topicTitle').textContent = 'Your Comic';
+                const ageMap = { '8-10': 'Ages 8 — 10', '11-13': 'Ages 11 — 13', '14-16': 'Ages 14 — 16', '17-18': 'Ages 17 — 18' };
+                const pageCount = 1 + (a.pages || []).length;
+                document.getElementById('topicBadge').innerHTML = (ageMap[realStory.selections.ageBand] || 'All Ages') + ' &bull; ' + pageCount + ' Pages';
+            } else {
+                // Fallback to prototype's mock library
+                const comic = comics[activeComic];
+                document.getElementById('topicCover').src = comic.cover;
+                document.getElementById('topicQuestion').textContent = comic.question;
+                document.getElementById('topicTitle').textContent = comic.title;
+                document.getElementById('topicBadge').innerHTML = comic.badge;
+            }
+
+            const charBlock = document.getElementById('topicCharacter');
+            if (selectedPersona) {
+                charBlock.style.display = '';
+                document.getElementById('topicCharName').textContent = selectedPersona.name;
+                document.getElementById('topicCharHook').textContent = selectedPersona.hook;
+            } else {
+                charBlock.style.display = 'none';
+            }
+
+            showScreen('topic');
+        }
+
+        // ── Comic Reader ──
+        let currentPageIdx = 0;
+        let loadedComic = null;
+
+        function goToReader() {
+            currentPageIdx = 0;
+            showScreen('reader');
+            loadReader();
+            renderPage();
+
+            // Show character overlay on cover if persona selected
+            const overlay = document.getElementById('readerCharOverlay');
+            if (selectedPersona) {
+                document.getElementById('readerCharText').textContent = 'Seen through the eyes of: ' + selectedPersona.name;
+                overlay.style.display = '';
+                overlay.classList.remove('fade-out');
+                setTimeout(() => { overlay.classList.add('fade-out'); }, 3000);
+            } else {
+                overlay.style.display = 'none';
+            }
+        }
+
+        function loadReader() {
+            const viewport = document.getElementById('readerViewport');
+            const dotsWrap = document.getElementById('readerDots');
+
+            // Prefer the real generated story if Phase 6 produced one
+            let pages;
+            if (realStory && realStory.artifacts && realStory.artifacts.cover) {
+                const a = realStory.artifacts;
+                pages = [{ src: a.cover, label: 'Cover' }]
+                    .concat((a.pages || []).sort((x, y) => x.num - y.num).map(p => ({ src: p.url, label: 'Page ' + p.num })));
+            } else {
+                pages = comics[activeComic].pages;
+            }
+
+            // Clear previous pages and dots (keep tap zones)
+            viewport.querySelectorAll('.reader-page').forEach(el => el.remove());
+            dotsWrap.innerHTML = '';
+
+            // Create page elements
+            pages.forEach((pg, i) => {
+                const div = document.createElement('div');
+                div.className = 'reader-page hidden';
+                div.dataset.idx = i;
+                const img = document.createElement('img');
+                img.src = pg.src;
+                img.alt = pg.label;
+                div.appendChild(img);
+                viewport.insertBefore(div, viewport.firstChild);
+            });
+
+            // Create dots
+            pages.forEach((_, i) => {
+                const dot = document.createElement('div');
+                dot.className = 'reader-dot' + (i === 0 ? ' active' : '');
+                dotsWrap.appendChild(dot);
+            });
+            // Store on viewport so renderPage/flipPage can read it
+            viewport.dataset.pageCount = pages.length;
+            viewport.dataset.lastLabel = pages[pages.length - 1].label;
+            // Stash page labels on the dots wrapper so renderPage can show them
+            dotsWrap.dataset.labels = JSON.stringify(pages.map(p => p.label));
+
+            // Swipe support (only bind once)
+            if (loadedComic === null) {
+                let startX = 0;
+                let isDragging = false;
+
+                viewport.addEventListener('touchstart', function(e) {
+                    startX = e.touches[0].clientX;
+                    isDragging = true;
+                }, { passive: true });
+
+                viewport.addEventListener('touchend', function(e) {
+                    if (!isDragging) return;
+                    isDragging = false;
+                    const diff = e.changedTouches[0].clientX - startX;
+                    if (Math.abs(diff) > 40) {
+                        flipPage(diff < 0 ? 1 : -1);
+                    }
+                }, { passive: true });
+            }
+
+            loadedComic = activeComic;
+        }
+
+        function getReaderLabels() {
+            const dotsWrap = document.getElementById('readerDots');
+            try {
+                return JSON.parse(dotsWrap.dataset.labels || '[]');
+            } catch { return []; }
+        }
+
+        function renderPage() {
+            const pageEls = document.querySelectorAll('.reader-page');
+            pageEls.forEach((p) => {
+                const idx = parseInt(p.dataset.idx);
+                p.classList.remove('current', 'prev', 'next', 'hidden');
+                if (idx === currentPageIdx) p.classList.add('current');
+                else if (idx === currentPageIdx - 1) p.classList.add('prev');
+                else if (idx === currentPageIdx + 1) p.classList.add('next');
+                else p.classList.add('hidden');
+            });
+
+            const labels = getReaderLabels();
+            document.getElementById('readerPageNum').textContent = labels[currentPageIdx] || ('Page ' + currentPageIdx);
+
+            document.querySelectorAll('.reader-dot').forEach((d, i) => {
+                d.classList.toggle('active', i === currentPageIdx);
+            });
+        }
+
+        function flipPage(dir) {
+            const labels = getReaderLabels();
+            const totalPages = labels.length || (realStory ? 1 : comics[activeComic].pages.length);
+            const newIdx = currentPageIdx + dir;
+            if (newIdx < 0) return;
+            if (newIdx >= totalPages) {
+                showScreen('end');
+                return;
+            }
+            currentPageIdx = newIdx;
+            renderPage();
+        }
+
+        // ── Scroll dots tracker ──
+        function initScrollDots() {
+            const scrollArea = document.getElementById('narrativeScroll');
+            const dots = document.querySelectorAll('#scrollDots .scroll-dot');
+            if (!scrollArea || !dots.length) return;
+
+            scrollArea.addEventListener('scroll', function() {
+                const cardWidth = 260 + 14; // card flex-basis + gap
+                const idx = Math.round(scrollArea.scrollLeft / cardWidth);
+                dots.forEach((d, i) => d.classList.toggle('active', i === idx));
+            });
+        }
+
+        // ── Typewriter ghost text ──
+        const phrases = [
+            "Everyone at school was talking about an earthquake...",
+            "I saw a protest on TikTok and didn't get it",
+            "What's happening between China and Taiwan?",
+            "Why are there wildfires everywhere this summer?",
+            "What's the deal with TikTok getting banned?"
+        ];
+
+        const qInput = document.getElementById('questionInput');
+        const ghostContent = document.getElementById('ghostContent');
+        const ghostText = document.getElementById('ghostText');
+        let phraseIdx = 0;
+        let charIdx = 0;
+        let isDeleting = false;
+        let typeTimer = null;
+
+        function updateGhostVisibility() {
+            ghostText.style.display = (qInput.value !== '' || document.activeElement === qInput) ? 'none' : 'flex';
+        }
+
+        qInput.addEventListener('focus', updateGhostVisibility);
+        qInput.addEventListener('blur', updateGhostVisibility);
+        qInput.addEventListener('input', updateGhostVisibility);
+
+        function typeStep() {
+            if (qInput.value !== '' || document.activeElement === qInput) {
+                typeTimer = setTimeout(typeStep, 200);
+                return;
+            }
+
+            const current = phrases[phraseIdx];
+
+            if (!isDeleting) {
+                charIdx++;
+                ghostContent.textContent = current.substring(0, charIdx);
+                if (charIdx >= current.length) {
+                    // pause at end of phrase
+                    typeTimer = setTimeout(() => { isDeleting = true; typeStep(); }, 2000);
+                    return;
+                }
+                typeTimer = setTimeout(typeStep, 50 + Math.random() * 40);
+            } else {
+                charIdx--;
+                ghostContent.textContent = current.substring(0, charIdx);
+                if (charIdx <= 0) {
+                    isDeleting = false;
+                    phraseIdx = (phraseIdx + 1) % phrases.length;
+                    typeTimer = setTimeout(typeStep, 400);
+                    return;
+                }
+                typeTimer = setTimeout(typeStep, 25);
+            }
+        }
+
+        function startTypewriter() {
+            if (!typeTimer) typeStep();
+        }
+
+        // ── Submit topic → wait for Phase 1 approval → then Age ──
+        async function submitTopic(topic) {
+            if (!storyId) await backendCreateStory(topic);
+            awaitingPhase = 'phase1';
+            goToGenerating();
+        }
+
+        // ── Enter key ──
+        qInput.addEventListener('keypress', async function(e) {
+            if (e.key === 'Enter' && this.value.trim()) {
+                await submitTopic(this.value.trim());
+            }
+        });
+
+        // ── LET'S GO button (button's onclick="goToAgeScreen()") ──
+        // Override so the button submits the topic and goes to loading instead.
+        goToAgeScreen = async function() {
+            const t = (qInput.value || '').trim();
+            if (t) await submitTopic(t);
+            else showScreen('age'); // fallback: shouldn't happen
+        };
+
+        // ── Cover pick (fanned covers on question screen) ──
+        const coverTopics = [
+            "What's happening with the Iran war and the Middle East",
+            "Social media's impact on kids and screen addiction",
+            "What's happening at the Olympics this year",
+            "Why is everyone talking about AI taking jobs"
+        ];
+
+        function pickCover(index) {
+            const text = coverTopics[index];
+            qInput.value = text;
+            updateGhostVisibility();
+
+            // Highlight the cover
+            const covers = document.querySelectorAll('.fan-cover');
+            covers[index].style.transform = 'rotate(0deg) translateY(-16px) scale(1.12)';
+            covers[index].style.boxShadow = '0 8px 20px rgba(245,158,11,0.5)';
+            covers[index].style.borderColor = 'var(--amber)';
+
+            // Scroll the input from start to end so user reads the full sentence
+            qInput.scrollLeft = 0;
+            const totalScroll = qInput.scrollWidth - qInput.clientWidth;
+            const duration = 1500; // ms to scroll across
+            const startTime = performance.now();
+
+            function scrollStep(now) {
+                const elapsed = now - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                // Ease out
+                const ease = 1 - Math.pow(1 - progress, 2);
+                qInput.scrollLeft = ease * totalScroll;
+                if (progress < 1) {
+                    requestAnimationFrame(scrollStep);
+                } else {
+                    // Done scrolling, pause then proceed
+                    setTimeout(() => {
+                        goToAgeScreen();
+                        covers[index].style.transform = '';
+                        covers[index].style.boxShadow = '';
+                        covers[index].style.borderColor = '';
+                    }, 600);
+                }
+            }
+            requestAnimationFrame(scrollStep);
+        }
+
+        // ── Video autoplay fallback ──
+        const vid = document.querySelector('.landing-video video');
+        if (vid) vid.play().catch(() => {});
+
+        // ── Deep-link via URL params ──
+        // ?storyId=<id>           → jump straight to that story's Topic screen
+        // ?storyId=<id>&go=reader → straight to Reader
+        // ?storyId=<id>&go=admin  → open Studio for that story
+        (function deepLinkInit() {
+            const qs = new URLSearchParams(window.location.search);
+            const sid = qs.get('storyId');
+            const go = qs.get('go') || 'topic';
+            if (!sid) return;
+            storyId = sid;
+            if (go === 'admin') {
+                window.location.href = '/admin.html#/stories/' + sid;
+                return;
+            }
+            (async () => {
+                realStory = await loadRealStory();
+                if (!realStory) {
+                    console.warn('[storylens] no images yet for', sid);
+                    return;
+                }
+                if (go === 'reader') {
+                    await goToTopic();
+                    goToReader();
+                } else {
+                    await goToTopic();
+                }
+            })();
+        })();
+    </script>
+</body>
+</html>
