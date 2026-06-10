@@ -1,9 +1,21 @@
 import { loadPrompt } from '../prompts/loader.js';
 import { readStory, writeArtifact, writeStory } from '../storage/fs.js';
-import { callGeminiWithSearch } from '../llm/gemini.js';
+import {
+  callGeminiWithSearch,
+  isTransientGeminiError,
+  sleep,
+  type CallResult,
+} from '../llm/gemini.js';
 import { publish } from '../events/bus.js';
 import { parseRefinement, wrapForCanvasRefinement } from './refinementHelpers.js';
 import type { ChatMessage, Story } from '../types.js';
+
+const PHASE1_MAX_ATTEMPTS = Number(process.env.GEMINI_PHASE1_MAX_ATTEMPTS || 3);
+const PHASE1_RETRY_DELAY_MS = Number(process.env.GEMINI_PHASE1_RETRY_DELAY_MS || 15_000);
+
+function phaseRetryDelayMs(attempt: number): number {
+  return Math.min(PHASE1_RETRY_DELAY_MS * Math.pow(2, attempt - 1), 60_000);
+}
 
 // Slot substitution per the iron rule. Never paraphrase the prompt.
 function buildInitialPromptText(promptBody: string, story: Story): string {
@@ -48,14 +60,40 @@ export async function runPhase1(storyId: string): Promise<void> {
   ];
 
   try {
-    const result = await callGeminiWithSearch(initialChat, (e) => {
-      const activity: 'search' | 'fetch' = 'search';
-      publish(storyId, { type: 'research', activity, detail: e.detail });
-      // Push to story's toolCalls log as we go
-      const phase = story.phases.phase1!;
-      phase.toolCalls = phase.toolCalls || [];
-      phase.toolCalls.push({ tool: e.tool, detail: e.detail, ts: new Date().toISOString() });
-    });
+    let result: CallResult | undefined;
+
+    for (let attempt = 1; attempt <= PHASE1_MAX_ATTEMPTS; attempt++) {
+      try {
+        result = await callGeminiWithSearch(initialChat, (e) => {
+          const activity: 'search' | 'fetch' = 'search';
+          publish(storyId, { type: 'research', activity, detail: e.detail });
+          // Push to story's toolCalls log as we go
+          const phase = story.phases.phase1!;
+          phase.toolCalls = phase.toolCalls || [];
+          phase.toolCalls.push({ tool: e.tool, detail: e.detail, ts: new Date().toISOString() });
+        });
+        break;
+      } catch (err) {
+        if (!isTransientGeminiError(err) || attempt >= PHASE1_MAX_ATTEMPTS) throw err;
+
+        const delayMs = phaseRetryDelayMs(attempt);
+        const detail = `Gemini is busy. Retrying research in ${Math.round(delayMs / 1000)} seconds (${attempt + 1}/${PHASE1_MAX_ATTEMPTS}).`;
+        console.warn(`[phase1] transient Gemini failure, retrying story=${storyId}: ${detail}`);
+        publish(storyId, { type: 'research', activity: 'search', detail });
+
+        const phase = story.phases.phase1!;
+        phase.toolCalls = phase.toolCalls || [];
+        phase.toolCalls.push({
+          tool: 'gemini_retry',
+          detail,
+          ts: new Date().toISOString(),
+        });
+        await writeStory(story);
+        await sleep(delayMs);
+      }
+    }
+
+    if (!result) throw new Error('Phase 1 research did not return a result.');
 
     const finalChat: ChatMessage[] = [
       ...initialChat,

@@ -39,11 +39,11 @@ function chatToContents(chat: ChatMessage[]) {
   }));
 }
 
-function sleep(ms: number): Promise<void> {
+export function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-function isTransientGeminiError(err: unknown): boolean {
+export function isTransientGeminiError(err: unknown): boolean {
   const message =
     err instanceof Error ? `${err.name}: ${err.message}` : typeof err === 'string' ? err : '';
   return /503|429|UNAVAILABLE|RESOURCE_EXHAUSTED|timed out|timeout|ETIMEDOUT|ECONNRESET|EAI_AGAIN|overload|high demand|Internal Server Error/i.test(
