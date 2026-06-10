@@ -2,7 +2,8 @@ import { GoogleGenAI } from '@google/genai';
 import type { ChatMessage } from '../types.js';
 
 const PRIMARY_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
-const BACKUP_MODELS = (process.env.GEMINI_BACKUP_MODELS || '')
+const DEFAULT_BACKUP_MODELS = 'gemini-2.5-flash-lite,gemini-2.0-flash';
+const BACKUP_MODELS = (process.env.GEMINI_BACKUP_MODELS || DEFAULT_BACKUP_MODELS)
   .split(',')
   .map((m) => m.trim())
   .filter(Boolean);
@@ -139,6 +140,12 @@ async function callGeminiWithFallbacks(
       continue modelLoop;
     }
     break;
+  }
+
+  if (lastErr && isTransientGeminiError(lastErr)) {
+    throw new Error(
+      `Gemini is temporarily overloaded after trying ${models.join(', ')}. Please retry in a minute.`
+    );
   }
 
   throw lastErr instanceof Error ? lastErr : new Error(describeError(lastErr));
