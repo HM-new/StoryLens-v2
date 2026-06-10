@@ -28,6 +28,7 @@ export async function runPhase1(storyId: string): Promise<void> {
   if (!story) throw new Error(`Story ${storyId} not found`);
 
   // Mark phase running
+  story.error = undefined;
   story.status = 'researching';
   story.phases.phase1 = {
     status: 'running',

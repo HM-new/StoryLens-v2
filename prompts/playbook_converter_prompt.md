@@ -47,6 +47,8 @@ OpenAI's `gpt-image-1.5` has **no conversation state between calls**. Every API 
 
 - **No real names** for any public figure — described by appearance and role only.
 
+- **Preserve reader-facing identity orientation.** If the comic script includes a roster page, field guide, dossier, "Cast Across Time" page, identity captions, or any other mechanism mapping fictionalized characters to real-world roles, it must become drawable page/panel content in the playbook. Do not demote it to the backend Character Reference table. Do not omit it to save space. The image prompt must include the exact labels/captions needed for the reader to understand who each fictionalized character represents.
+
 ---
 
 ## Output Structure
@@ -74,6 +76,7 @@ GLOBAL CONSTRAINTS:
 - Aspect ratio: 2:3 portrait
 - All text hand-lettered in the image (no typed fonts, no post-production)
 - No real names — figures described by appearance and role only
+- Fictionalized public figures must be mapped with clear role labels in reader-facing captions or orientation pages
 ```
 
 The Setup Block is NOT sent to the API by itself. Its contents are copied into each page prompt.
@@ -127,4 +130,5 @@ Table mapping comic characters to their story roles. Useful for review, not sent
 - [ ] No prompt mentions "upload" or "reference image" as a user instruction — the server handles attachments
 - [ ] Aspect ratio `2:3 portrait` in every prompt
 - [ ] No real names; public figures described by appearance and role only
+- [ ] Any roster, field guide, dossier, cast page, or first-appearance identity caption from the script is preserved as drawable page/panel content
 - [ ] Style-drift reminder matches the selected style in `style_guide.md`

@@ -28,7 +28,7 @@ All character designs, color palettes, text treatments, panel styles, and abstra
 
 The Explainer character (Mira Chen) is defined in `style_guide.md` Section 3 — including her fixed identity, core visual signature, per-style rendering, and the rules for how she appears in each narrative style. Treat that section as authoritative; do not invent your own version of Mira.
 
-Public figure names can be changed slightly so that they seem fictionalised.
+Public figure names can be changed slightly so that they seem fictionalised, but fictionalization must never make the story harder to understand. If a real public figure, company leader, analyst, politician, regulator, expert, institution, or named source is fictionalized or renamed, the comic must give the reader a clear, reader-facing bridge back to who or what that character represents.
 
 ---
 
@@ -59,15 +59,18 @@ Before writing any panels, establish visual consistency by defining every recurr
 
 Some stories have enough recurring characters that a reader walking in cold can get lost in the first few pages. A character roster page solves this — but it costs a page from the length budget, and if done badly it kills the cold-open punch of Page 1. Use these style-specific rules:
 
-- **Threshold:** Include a roster page only when **3 or more recurring characters appear in the first 3 pages** of the story. Below that threshold, inline introduction (a name caption the first time each character appears) is enough.
+- **Identity-orientation trigger:** If any public figure, company leader, analyst, politician, regulator, expert, institution, or named source is fictionalized or renamed, you must include a reader-facing orientation mechanism. This can be a roster page, half-page, sidebar, dossier, field guide, caption system, or first-appearance labels, but it must appear in the comic itself, not only in Part A or backend notes. The reader must understand which real-world role each fictionalized character represents.
+- **Threshold:** Include a full roster/orientation page when **3 or more recurring characters appear in the first 3 pages** OR when **3 or more real-world people/roles are fictionalized anywhere in the comic**. Below that threshold, inline introduction can be enough only if the first-appearance caption clearly maps the fictionalized character to their real-world role.
 - **Walk in Someone's Shoes:** Optional. If included, the roster page must be **diegetic** — framed as an in-world artifact that the story's universe would actually contain (a NASA mission press kit, a hospital staff directory, a court dossier, a trial program). It must NOT be an explainer breakout that addresses the reader. **Placement:** immediately after Page 1 (the cold-open POV punch lands first, then the reader gets oriented, then the story continues). The POV character is signaled visually — larger portrait, hero position, or a small diegetic tag in the document's graphic style — never with a fourth-wall caption like "← you" or "POV character." Mira does NOT appear on this page.
 - **Investigation:** Encouraged. Frame as a "case file" or "dramatis personae" — the genre expects it. Can be placed before the mystery begins (Page 1 or Page 2). Treat it as the detective's pinboard.
-- **Time Traveler:** Discouraged. The cast shifts by era; a unified roster doesn't fit the form. Instead, introduce people inside their own era as they appear.
+- **Time Traveler:** If no characters are fictionalized, a unified roster is usually discouraged because the cast shifts by era. If characters are fictionalized, use a diegetic orientation page early in the comic — for example, "Time Traveler's Field Guide," "Cast Across Time," or "Who We Meet on This Journey." Place it immediately after the cold open or first present-day setup page. It should map fictionalized characters to real-world roles/anchors such as "the founder," "a senator/regulator voice," "a market analyst," "a retail investor," or "the explainer journalist." It should not over-explain the plot; it exists so the reader knows who each stylized person represents before the timeline starts moving quickly.
 - **Debate:** Required when 3+ positions are presented. Frame as "the positions" — each side gets visually equal weight. Appears early, before the arguments begin. The structure of the page itself (equal portraits, equal labels, equal space) is part of the comic's commitment to non-false-equivalence.
 
 **Cost:** Roster pages count against the length budget (Brief 8–14, Standard 16–28, Deep Dive 30–48). For Brief in particular, only add a roster when the threshold is genuinely hit — the page count is tight.
 
-**Information per character on the roster:** name, role/affiliation, and at most one short distinguishing line. Resist the urge to write paragraphs — the roster is for orientation, not exposition.
+**Information per character on the roster:** fictionalized display name, real-world role/anchor, affiliation or viewpoint, and at most one short distinguishing line. Resist the urge to write paragraphs — the roster is for orientation, not exposition. If exact real names are avoided for image-generation reasons, the mapping must still be clear through role language such as "SpaceX founder," "U.S. senator questioning investor risk," "market analyst warning about valuation," or "ordinary retail investor."
+
+**Inline identity captions:** When a full roster page is not needed, every fictionalized character must get a first-appearance caption that includes role mapping. Good: "Eli Mars, the founder-CEO figure." Good: "Senator Warren-like regulator voice, questioning investor risk." Bad: "Eli, visionary." Bad: "The critic."
 
 ---
 
@@ -181,6 +184,7 @@ Before delivering the script, verify:
 
 - [ ] Every major story beat from the source document is covered in at least one panel
 - [ ] Character descriptions are consistent — no character changes appearance between their bible entry and their panel descriptions
+- [ ] Any fictionalized public figure/source is clearly mapped for the reader through a roster/orientation page or first-appearance role caption
 - [ ] The visual system rules established in Part A are followed throughout Part C
 - [ ] Text per panel stays within age-band limits
 - [ ] Page count falls within the length setting range

@@ -43,6 +43,7 @@ export async function runPhase2(storyId: string): Promise<void> {
   const story = await readStory(storyId);
   if (!story) throw new Error(`Story ${storyId} not found`);
 
+  story.error = undefined;
   story.status = 'calibrating';
   story.phases.phase2 = {
     status: 'running',

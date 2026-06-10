@@ -59,6 +59,7 @@ export async function runPhase3(storyId: string): Promise<void> {
   const story = await readStory(storyId);
   if (!story) throw new Error(`Story ${storyId} not found`);
 
+  story.error = undefined;
   story.status = 'styling-narrative';
   story.phases.phase3 = {
     status: 'running',

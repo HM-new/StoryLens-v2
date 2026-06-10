@@ -7,6 +7,20 @@ import { runPhase5a } from './phase5a_script.js';
 import { runPhase5b } from './phase5b_playbook.js';
 import { runPhase6 } from './phase6_images.js';
 
+const PHASE_ORDER = ['phase1', 'phase2', 'phase3', 'phase5a', 'phase5b', 'phase6'] as const;
+
+function clearDownstreamPhases(story: NonNullable<Awaited<ReturnType<typeof readStory>>>, phase: string): void {
+  const index = PHASE_ORDER.indexOf(phase as (typeof PHASE_ORDER)[number]);
+  if (index === -1) return;
+  for (const downstream of PHASE_ORDER.slice(index + 1)) {
+    story.phases[downstream] = {
+      status: 'pending',
+      chat: [],
+    };
+  }
+  story.artifacts = undefined;
+}
+
 /**
  * Checks the story state and starts the next phase that's now runnable.
  * Idempotent — safe to call multiple times. Called from approvePhase and
@@ -96,6 +110,7 @@ export async function restartPhase(storyId: string, phase: string): Promise<void
     status: 'pending',
     chat: [],
   };
+  clearDownstreamPhases(story, phase);
   await writeStory(story);
 
   if (phase === 'phase1') {

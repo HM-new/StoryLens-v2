@@ -50,6 +50,7 @@ export async function runPhase5b(storyId: string): Promise<void> {
   const story = await readStory(storyId);
   if (!story) throw new Error(`Story ${storyId} not found`);
 
+  story.error = undefined;
   story.status = 'building-playbook';
   story.phases.phase5b = {
     status: 'running',

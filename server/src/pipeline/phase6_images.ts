@@ -3,7 +3,7 @@ import { existsSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import { readArtifact, readStory, writeStory } from '../storage/fs.js';
 import { PROJECT_ROOT, storyDir } from '../storage/paths.js';
-import { generateImage } from '../llm/gemini-image.js';
+import { generateImage } from '../llm/image.js';
 import { publish } from '../events/bus.js';
 import { parsePlaybook, type PagePrompt } from './playbookParser.js';
 import type { Story } from '../types.js';
@@ -156,6 +156,7 @@ export async function runPhase6(storyId: string): Promise<void> {
     console.warn(`[phase6] no style reference found for ${visualStyleId}`);
   }
 
+  story.error = undefined;
   story.status = 'generating-images';
   story.phases.phase6 = {
     status: 'running',
