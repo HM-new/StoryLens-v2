@@ -131,7 +131,7 @@ export async function runCascadeFromPhase5a(storyId: string, message: string): P
 
   // 7. Regenerate only changed + added pages, in playbook order (so prev-page chain is consistent)
   const toRegen = [...diff.changed, ...diff.added].sort((a, b) => a.index - b.index);
-  const failures: string[] = [];
+  const failures: { promptNumber: number; title: string; filename: string; error: string }[] = [];
   for (const p of toRegen) {
     const filename = filenameFor(p);
     try {
@@ -140,7 +140,12 @@ export async function runCascadeFromPhase5a(storyId: string, message: string): P
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       console.error(`[cascade] regen failed for ${filename}: ${msg}`);
-      failures.push(`${filename}: ${msg}`);
+      failures.push({
+        promptNumber: p.number,
+        title: p.title,
+        filename,
+        error: msg,
+      });
     }
   }
 
@@ -149,13 +154,14 @@ export async function runCascadeFromPhase5a(storyId: string, message: string): P
   final.status = failures.length ? 'error' : 'ready';
   final.phases.phase6 = {
     ...(final.phases.phase6 || { chat: [] }),
-    status: failures.length ? 'error' : 'awaiting-review',
+    status: failures.length ? 'error' : 'approved',
     chat: [],
     finishedAt: new Date().toISOString(),
-    error: failures.length ? failures.join('; ') : undefined,
+    error: failures.length ? `${failures.length} page(s) failed QA` : undefined,
     artifact: JSON.stringify(
       {
         totalPrompts: newPrompts.length,
+        generated: newPrompts.length - failures.length,
         regenerated: toRegen.length - failures.length,
         unchanged: diff.unchanged.length,
         failures: failures,

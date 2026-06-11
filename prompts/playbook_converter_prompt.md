@@ -37,6 +37,12 @@ OpenAI's `gpt-image-1.5` has **no conversation state between calls**. Every API 
 
 - **Every page prompt is self-contained.** It must include: the style lock (one short paragraph from `style_guide.md`), full physical descriptions of every character that appears on the page, the panel layout, scene description, all dialogue and hand-lettered text verbatim, and the aspect ratio.
 
+- **Full-page canvas.** Every generated image must be a complete finished `2:3 portrait` comic page that fills the full canvas. Do not generate a short comic page, a partial page, a page floating inside a larger image, a page photographed in perspective, a phone-screen preview, or large unused white margins. Comic gutters and page borders are allowed only as part of a full-page layout.
+
+- **Low-density layout.** Keep normal story pages within the script's age-band panel limits. If the script asks for too many panels or too much text, simplify the image prompt into fewer larger panels while preserving the story beat. Do not create dense 6-panel grids unless the page is explicitly a roster, dossier, or profile page.
+
+- **Readable in-image lettering.** The final image should include the script's captions and dialogue as hand-lettered comic text, but text must be large, clean, and phone-readable. Preserve the selected style's text treatment, but never use tiny labels, fake app names, dense document text, unreadable screens, or microtext.
+
 - **Do NOT write "upload previous page as reference."** The server attaches reference images automatically. Page prompts should be written assuming the model is seeing the style reference and the previous page on every call — but should never instruct the user (or executor) to upload anything.
 
 - **Character descriptions repeated word-for-word.** Use the bible from the comic script. If Milo appears on three pages, the full physical description of Milo appears on three pages. This is the #1 character-consistency mechanism.
@@ -74,7 +80,11 @@ VISUAL RULES: [time-period color shifts, flashback treatment, emotional pacing r
 
 GLOBAL CONSTRAINTS:
 - Aspect ratio: 2:3 portrait
+- Full finished comic page fills the entire canvas
+- No short pages, partial pages, page-within-page mockups, phone-screen previews, or large unused margins
 - All text hand-lettered in the image (no typed fonts, no post-production)
+- Large, clean, phone-readable comic lettering
+- No tiny text, fake app names, dense background documents, unreadable screens, or micro-labels
 - No real names — figures described by appearance and role only
 - Fictionalized public figures must be mapped with clear role labels in reader-facing captions or orientation pages
 ```
@@ -105,7 +115,7 @@ PANEL 2: [...]
 
 [...]
 
-Aspect ratio: 2:3 portrait. All text hand-lettered in the image. No typed fonts.
+Aspect ratio: 2:3 portrait. Full finished comic page fills the entire canvas. All text hand-lettered in the image. Large, clean, phone-readable lettering. No typed fonts. No short pages, partial pages, page-within-page mockups, phone-screen previews, large unused margins, tiny text, fake app names, dense background documents, unreadable screens, or micro-labels.
 ```
 
 Number prompts sequentially starting from the Cover (prompt 1), then Page 1 (prompt 2), Page 2 (prompt 3), etc.
@@ -127,6 +137,9 @@ Table mapping comic characters to their story roles. Useful for review, not sent
 - [ ] Every character appearing on a page has their full physical description on that page
 - [ ] Every page from the comic script has a corresponding prompt
 - [ ] All text/dialogue from the script appears verbatim with exact wording
+- [ ] Text has been kept sparse enough to be readable inside the generated image
+- [ ] Each prompt asks for a complete full-canvas `2:3 portrait` comic page
+- [ ] No prompt asks for tiny background text, fake app labels, dense document copy, unreadable screens, or microtext
 - [ ] No prompt mentions "upload" or "reference image" as a user instruction — the server handles attachments
 - [ ] Aspect ratio `2:3 portrait` in every prompt
 - [ ] No real names; public figures described by appearance and role only

@@ -16,6 +16,19 @@ interface ImageItem {
   label: string;
 }
 
+interface Phase6Failure {
+  promptNumber?: number;
+  title: string;
+  filename?: string;
+  error: string;
+}
+
+interface Phase6Manifest {
+  totalPrompts?: number;
+  generated?: number;
+  failures?: Phase6Failure[];
+}
+
 function collectImages(story: Story): ImageItem[] {
   const items: ImageItem[] = [];
   const cover = story.artifacts?.cover;
@@ -48,7 +61,11 @@ export default function Phase6Gallery({ story, state, onRestart, onApprove, onRe
 
   // Reset local "cascading" once the backend has caught up and produced a fresh artifact
   useEffect(() => {
-    if (cascading && p6?.status === 'awaiting-review' && (story.artifacts?.cover || (story.artifacts?.pages || []).length > 0)) {
+    if (
+      cascading &&
+      (p6?.status === 'approved' || p6?.status === 'awaiting-review') &&
+      (story.artifacts?.cover || (story.artifacts?.pages || []).length > 0)
+    ) {
       setCascading(false);
     }
     if (cascading && p6?.status === 'error') setCascading(false);
@@ -65,7 +82,7 @@ export default function Phase6Gallery({ story, state, onRestart, onApprove, onRe
     } else cascadeStage = 'Working on the script refinement…';
   }
 
-  let manifest: { totalPrompts?: number; generated?: number; failures?: { title: string; error: string }[] } = {};
+  let manifest: Phase6Manifest = {};
   if (state.artifact) {
     try { manifest = JSON.parse(state.artifact); } catch { /* ignore */ }
   }
@@ -126,7 +143,14 @@ export default function Phase6Gallery({ story, state, onRestart, onApprove, onRe
         </div>
       </div>
 
-      {state.error && <div className="admin-error">{state.error}</div>}
+      {state.error && (
+        <div className="admin-error">
+          {state.error}
+          {manifest.failures && manifest.failures.length > 0
+            ? ' QA-passed pages are already available in Reader; retry the failed pages below.'
+            : ''}
+        </div>
+      )}
       {err && <div className="admin-error">{err}</div>}
 
       {state.status === 'running' && (
@@ -205,15 +229,46 @@ export default function Phase6Gallery({ story, state, onRestart, onApprove, onRe
       </details>
 
       {manifest.failures && manifest.failures.length > 0 && (
-        <details className="phase-tool-log" style={{ marginTop: 12 }}>
-          <summary>Failed pages ({manifest.failures.length})</summary>
-          <ul>
+        <details className="phase-tool-log" style={{ marginTop: 12 }} open={state.status === 'error'}>
+          <summary>Pages needing Studio retry ({manifest.failures.length})</summary>
+          <div style={{ display: 'grid', gap: 10, marginTop: 10 }}>
             {manifest.failures.map((f, i) => (
-              <li key={i}>
-                <strong>{f.title}</strong>: <code>{(f.error || '').slice(0, 200)}</code>
-              </li>
+              <div
+                key={f.filename || `${f.title}-${i}`}
+                style={{
+                  display: 'grid',
+                  gap: 6,
+                  padding: 10,
+                  border: '1px solid #fecaca',
+                  borderRadius: 10,
+                  background: '#fff7f7',
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
+                  <strong>
+                    {f.promptNumber != null ? `Page ${f.promptNumber}: ` : ''}
+                    {f.title}
+                  </strong>
+                  {f.filename && <code>{f.filename}</code>}
+                </div>
+                <code style={{ whiteSpace: 'pre-wrap' }}>{(f.error || '').slice(0, 300)}</code>
+                {f.filename ? (
+                  <button
+                    onClick={() => void regenerate(f.filename!)}
+                    disabled={regenerating !== null}
+                    className="phase6-regen-btn"
+                    style={{ justifySelf: 'start' }}
+                  >
+                    {regenerating === f.filename ? 'Retrying…' : '↻ Retry this page'}
+                  </button>
+                ) : (
+                  <span style={{ color: '#991b1b', fontSize: 12 }}>
+                    Missing filename in manifest. Re-run Phase 6 if this came from an older build.
+                  </span>
+                )}
+              </div>
             ))}
-          </ul>
+          </div>
         </details>
       )}
 
@@ -235,7 +290,7 @@ export default function Phase6Gallery({ story, state, onRestart, onApprove, onRe
       )}
 
       {state.status === 'approved' && (
-        <div className="phase-approved-note">✓ Approved — comic ready in Reader.</div>
+        <div className="phase-approved-note">✓ QA passed — comic is live in Reader.</div>
       )}
     </div>
   );

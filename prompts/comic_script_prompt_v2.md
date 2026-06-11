@@ -26,6 +26,8 @@ You are a comic book writer and visual director. Read the story document, the Le
 
 All character designs, color palettes, text treatments, panel styles, and abstract concept visualizations must follow the selected style's specification exactly. Refer to the style guide for these rules — do not invent your own.
 
+Write pages so the final image can be used directly in a mobile reader. The image model will render final comic lettering inside the art, so the script must protect readability by limiting panel density and text volume before the image prompt is ever written.
+
 The Explainer character (Mira Chen) is defined in `style_guide.md` Section 3 — including her fixed identity, core visual signature, per-style rendering, and the rules for how she appears in each narrative style. Treat that section as authoritative; do not invent your own version of Mira.
 
 Public figure names can be changed slightly so that they seem fictionalised, but fictionalization must never make the story harder to understand. If a real public figure, company leader, analyst, politician, regulator, expert, institution, or named source is fictionalized or renamed, the comic must give the reader a clear, reader-facing bridge back to who or what that character represents.
@@ -135,6 +137,8 @@ For each page, provide:
 
 **Panel layout:** Describe how many panels are on this page and how they are arranged (e.g., "3 panels — wide establishing shot on top, two equal panels below"; "Full-page splash"; "6-panel grid"). For Walk in Shoes pages with a Mira sidebar, note the sidebar's position separately ("sidebar callout in right margin, adjacent to Panel 2").
 
+**Full-page fit:** Every page must be planned as a complete `2:3 portrait` comic page that fills the full canvas. Do not plan short pages, partial pages, floating page mockups, page-within-page compositions, phone-screen previews, or large unused margins. White gutters and comic borders are fine only when they are part of a finished full-page comic layout.
+
 **For each panel:**
 
 > **Panel [number]**
@@ -152,10 +156,18 @@ For each page, provide:
 > **Visual notes:** [Sidebar background color, border treatment, position relative to which panel]
 
 **Pacing guidelines:**
-- For ages 8–10: Average 2–3 panels per page. No more than 20–30 words of text per panel. At least one large or full-width panel per page for visual breathing room. Key reveals get splash panels or half-page panels.
-- For ages 11–13: Average 3–4 panels per page. Text can be slightly denser. More varied layouts.
-- For ages 14–16: 4–5 panels per page. Structured grids. Infographic panels count as panels.
-- For ages 17–18: 4–6 panels per page. Complex layouts allowed. Text density can approach adult graphic novels.
+- For ages 8–10: Average 1–3 panels per page. No more than 16 words in any caption or 8 words in any speech bubble. No more than 3 reader-facing text elements per page. At least one large or full-width panel per page for visual breathing room. Key reveals get splash panels or half-page panels.
+- For ages 11–13: Average 2–3 panels per page. No more than 20 words in any caption or 10 words in any speech bubble. No more than 4 reader-facing text elements per page. Use 4 panels only for a deliberately simple clue grid.
+- For ages 14–16: Average 2–4 panels per page. No more than 24 words in any caption or 12 words in any speech bubble. Prefer cinematic panels, profile pages, document reveals, and clear infographics over dense grids.
+- For ages 17–18: Average 2–4 panels per page. Use 5 panels only for an intentional roster, dossier, or profile page. No more than 30 words in any caption or 14 words in any speech bubble. Complex layouts are allowed only when the text remains large and phone-readable.
+
+**Lettering density rules:**
+- Prefer one strong visual beat per page over several small beats.
+- Prefer one caption plus one short dialogue exchange over many small bubbles.
+- No panel may contain more than 2 speech bubbles.
+- No page may contain tiny background document text, fake app names, unreadable screens, micro-labels, or dense legal/financial/scientific copy.
+- If a document, screen, chart, sign, or interface appears, show it visually but keep any readable text to 1–3 large words or symbols.
+- All reader-facing text must be simple enough for the image model to render cleanly at mobile size.
 
 **Page count by length setting:**
 - Brief: 8–14 pages (including cover)
@@ -187,6 +199,9 @@ Before delivering the script, verify:
 - [ ] Any fictionalized public figure/source is clearly mapped for the reader through a roster/orientation page or first-appearance role caption
 - [ ] The visual system rules established in Part A are followed throughout Part C
 - [ ] Text per panel stays within age-band limits
+- [ ] Panel counts follow the age-band limits and no normal page uses a dense 6-panel grid
+- [ ] Every page is planned as a full `2:3 portrait` comic page that fills the canvas
+- [ ] No page depends on tiny background text, fake app labels, unreadable screens, or microtext
 - [ ] Page count falls within the length setting range
 - [ ] Abstract concepts (data, laws, corporate decisions) have been given concrete visual form — they are shown, not just described in text boxes
 - [ ] The tone and palette match the selected visual style from style_guide.md throughout
