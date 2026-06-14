@@ -53,12 +53,21 @@ interface Phase6Failure {
   title: string;
   filename: string;
   error: string;
+  durationMs?: number;
+}
+
+interface Phase6PageMetric {
+  promptNumber: number;
+  title: string;
+  filename: string;
+  durationMs: number;
 }
 
 interface Phase6Manifest {
   totalPrompts: number;
   generated: number;
   failures: Phase6Failure[];
+  pages: Phase6PageMetric[];
 }
 
 function imageUrl(storyId: string, filename: string): string {
@@ -86,11 +95,16 @@ function hasAllGeneratedArtifacts(story: Story, prompts: PagePrompt[]): boolean 
   });
 }
 
-function buildPhase6Manifest(prompts: PagePrompt[], failures: Phase6Failure[]): Phase6Manifest {
+function buildPhase6Manifest(
+  prompts: PagePrompt[],
+  failures: Phase6Failure[],
+  pages: Phase6PageMetric[] = []
+): Phase6Manifest {
   return {
     totalPrompts: prompts.length,
     generated: prompts.length - failures.length,
     failures,
+    pages,
   };
 }
 
@@ -102,6 +116,7 @@ function parsePhase6Manifest(artifact?: string): Phase6Manifest | null {
       totalPrompts: typeof parsed.totalPrompts === 'number' ? parsed.totalPrompts : 0,
       generated: typeof parsed.generated === 'number' ? parsed.generated : 0,
       failures: Array.isArray(parsed.failures) ? parsed.failures : [],
+      pages: Array.isArray(parsed.pages) ? parsed.pages : [],
     };
   } catch {
     return null;
@@ -317,6 +332,7 @@ export async function regenerateSinglePage(
     if (existsSync(prevFile)) prevPagePath = prevFile;
   }
 
+  const pageStartedAt = Date.now();
   const { outPath, inputTokens, outputTokens } = await generateOne(
     storyId,
     imagesDir,
@@ -335,12 +351,25 @@ export async function regenerateSinglePage(
       existingManifest?.failures.filter(
         (failure) => failure.filename !== savedFilename && failure.promptNumber !== target.number
       ) || [];
+    const previousPages =
+      existingManifest?.pages.filter(
+        (page) => page.filename !== savedFilename && page.promptNumber !== target.number
+      ) || [];
+    const generatedPages = [
+      ...previousPages,
+      {
+        promptNumber: target.number,
+        title: target.title,
+        filename: savedFilename,
+        durationMs: Date.now() - pageStartedAt,
+      },
+    ].sort((a, b) => a.promptNumber - b.promptNumber);
 
     upsertImageArtifact(refreshed, target, savedFilename);
     p6.inputTokens = (p6.inputTokens || 0) + inputTokens;
     p6.outputTokens = (p6.outputTokens || 0) + outputTokens;
     p6.artifact = JSON.stringify(
-      buildPhase6Manifest(prompts, remainingFailures),
+      buildPhase6Manifest(prompts, remainingFailures, generatedPages),
       null,
       2
     );
@@ -414,9 +443,11 @@ export async function runPhase6(storyId: string): Promise<void> {
   let totalIn = 0;
   let totalOut = 0;
   const failures: Phase6Failure[] = [];
+  const generatedPages: Phase6PageMetric[] = [];
 
   for (let i = 0; i < prompts.length; i++) {
     const p = prompts[i];
+    const pageStartedAt = Date.now();
     try {
       const { outPath, inputTokens, outputTokens } = await generateOne(
         storyId,
@@ -431,6 +462,12 @@ export async function runPhase6(storyId: string): Promise<void> {
 
       // Update Story.artifacts as each QA-passed image lands so polling and Reader can show progress.
       const filename = path.basename(outPath);
+      generatedPages.push({
+        promptNumber: p.number,
+        title: p.title,
+        filename,
+        durationMs: Date.now() - pageStartedAt,
+      });
       const refreshed = (await readStory(storyId)) as Story;
       const url = upsertImageArtifact(refreshed, p, filename);
       await writeStory(refreshed);
@@ -448,6 +485,7 @@ export async function runPhase6(storyId: string): Promise<void> {
         title: p.title,
         filename: filenameFor(p),
         error: msg,
+        durationMs: Date.now() - pageStartedAt,
       });
       // Continue to next page rather than aborting the whole comic
     }
@@ -458,7 +496,7 @@ export async function runPhase6(storyId: string): Promise<void> {
   final.phases.phase6 = {
     ...(final.phases.phase6 || { status: 'pending', chat: [] }),
     status: failures.length ? 'error' : 'approved',
-    artifact: JSON.stringify(buildPhase6Manifest(prompts, failures), null, 2),
+    artifact: JSON.stringify(buildPhase6Manifest(prompts, failures, generatedPages), null, 2),
     chat: [],
     startedAt: final.phases.phase6?.startedAt,
     finishedAt,
